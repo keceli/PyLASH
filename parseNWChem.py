@@ -155,7 +155,7 @@ def getArgs():
     """
     July 25, 2014
     Murat Keceli
-    Parser for Nwchem log files, log.*. 
+    Parser for Nwchem output files, log.*. 
     """
     )
     parser.add_argument('input', metavar='FILE', type=str, nargs='?',
