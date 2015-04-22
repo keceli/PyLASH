@@ -13,9 +13,7 @@ def initializeLog(debug=False,warning=False,silent=False):
     ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(logLevel)
     logging.debug("Debugging messages on...") 
-    logging.info("Informational messages on...") 
-    logging.warning("Warning messages on ...") 
-    logging.error("Error messages on ...") 
+    logging.warning("Only warning messages will be printed ...") 
     return 0
 
 def getArgs():
