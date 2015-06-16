@@ -60,7 +60,7 @@ def getCubicFit(x,y):
     return popt
 
 def getExtendedArray(x,maxValue):
-    if len(x)<2: 
+    if len(x)<2:
         logging.error('x should be an array of length > 1')
         return x
     factor=x[-1]/x[-2]
@@ -71,8 +71,8 @@ def getExtendedArray(x,maxValue):
     y=x
     while y[-1]<maxValue:
         y = np.append(y,y[-1]*factor)
-    return y    
-    
+    return y
+
 def getAmdahlLaw(t,ts,n):
     logging.debug('\n getAmdahlLaw...')
     if (ts>t): logging.error('ts > t')
@@ -89,24 +89,24 @@ def getPowerFit(x, y):
     from scipy import optimize, log10
     logx = log10(x)
     logy = log10(y)
-    
+
     # define our (line) fitting function
     fitfunc = lambda p, x: p[0] + p[1] * x
     errfunc = lambda p, x, y: (y - fitfunc(p, x))
-    
+
     pinit = [1.0, -1.0]
     out = optimize.leastsq(errfunc, pinit,
                            args=(logx, logy), full_output=1)
-    
+
     pfinal = out[0]
     covar = out[1]
-    
+
     index = pfinal[1]
     amp = 10.0 ** pfinal[0]
-    
+
     print '\n Power fit output:'
     print 'amp:', amp, 'index', index, 'covar', covar
-    
+
     return [amp * (x ** index), amp, index]
 
 def plotSIPsNNnzScalingFigure(embed=0):
@@ -123,13 +123,13 @@ def plotSIPsNNnzScalingFigure(embed=0):
     TmatrixSize, TnCores, Tratios, TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
     WmatrixSize, WnCores, Wratios, WsolveTime, WtotalTime, Wncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_W.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
     DmatrixSize, DnCores, Dratios, DsolveTime, DtotalTime, Dncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_D.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
- 
+
     matrixSize,Tnnz,Wnnz,Dnnz = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_fillin.txt", unpack=True, usecols=(0,4,5,6))
 
     matlistD = [8000, 16000, 32000, 64000]
     matlistW = [8000, 16000, 32000, 64000, 128000]
     matlistT = [8000, 16000, 32000,64000, 128000,256000, 512000]
-    
+
     xT=np.zeros(len(matlistT))
     xT2=np.zeros(len(matlistT))
     yT=np.zeros(len(matlistT))
@@ -149,16 +149,16 @@ def plotSIPsNNnzScalingFigure(embed=0):
 
     xD=np.zeros(len(matlistD))
     xD2=np.zeros(len(matlistD))
-    yD=np.zeros(len(matlistD))  
+    yD=np.zeros(len(matlistD))
     for i in range(len(matlistD)):
         yD[i] = min(DsolveTime[np.logical_and(DnCores == 16384,DmatrixSize == matlistD[i])])
         xD[i] = matlistD[i]*Dnnz[matrixSize == matlistD[i]]
         xD2[i] = matlistD[i]
-        
+
     xTW=np.concatenate([xT,xW])
     xTW2=np.concatenate([xT2,xW2])
-    yTW=np.concatenate([yT,yW])   
-        
+    yTW=np.concatenate([yT,yW])
+
     if not embed: plt.figure()
 
     xlabel = r"$N \cdot N_{nz}$"
@@ -170,14 +170,14 @@ def plotSIPsNNnzScalingFigure(embed=0):
     plt.ylabel(ylabel)
     plt.xlim(1e10, 1.8e14)
     plt.ylim(1, 2e3)
-        
+
     p1,= plt.plot(xT, yT, linestyle='None', label="nanotube", marker='o', markersize=ms, mfc='b', mec='b')
     p2,= plt.plot(xW, yW, linestyle='None', label='nanowire', marker='s', markersize=ms, mfc='g', mec='g')
     p3,= plt.plot(xD, yD, linestyle='None', label='diamond', marker='d', markersize=ms, mfc='r', mec='r')
-    
+
     plegend = plt.legend(handles=[p1,p2,p3], loc='upper left', prop={'size':legendsize})
     plt.gca().add_artist(plegend)
-    
+
     myfit = getPowerFit(xD, yD)
     mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$(N\cdot N_{{nz}})^{{{0:.2f}}}$'.format(myfit[2])
     f1,=plt.plot(xD, myfit[0], label=mylabel, linestyle='--', color='red')
@@ -185,9 +185,9 @@ def plotSIPsNNnzScalingFigure(embed=0):
     myfit = getPowerFit(xTW, yTW)
     mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$(N\cdot N_{{nz}})^{{{0:.2f}}}$'.format(myfit[2])
     f2,=plt.plot(xTW, myfit[0], label=mylabel, linestyle='-', color='blue')
-    
+
     plt.legend(handles=[f1,f2],loc='lower right', prop={'size':legendsize})
-    
+
     if not embed: plt.show() #plt.savefig("SIPs_NNz_scaling.png")
 
     return
@@ -215,12 +215,12 @@ def plotSIPsElementalScaling(embed=0):
     matlistW = [8000, 16000, 32000, 64000, 128000]
     matlistT = [8000, 16000, 32000,64000, 128000,256000, 512000]
     x=np.arange(8000,5000000,1000)
-    
+
     xT=np.zeros(len(matlistT))
     xT2=np.zeros(len(matlistT))
     yT=np.zeros(len(matlistT))
     if not embed: plt.figure()
-    
+
     for i in range(len(matlistT)):
         yT[i] = min(TsolveTime[np.logical_and(TnCores == 16384,TmatrixSize == matlistT[i])])
         xT[i] = matlistT[i]*Tnnz[matrixSize == matlistT[i]]
@@ -236,31 +236,31 @@ def plotSIPsElementalScaling(embed=0):
 
     xD=np.zeros(len(matlistD))
     xD2=np.zeros(len(matlistD))
-    yD=np.zeros(len(matlistD))  
+    yD=np.zeros(len(matlistD))
     for i in range(len(matlistD)):
         yD[i] = min(DsolveTime[np.logical_and(DnCores == 16384,DmatrixSize == matlistD[i])])
         xD[i] = matlistD[i]*Dnnz[matrixSize == matlistD[i]]
         xD2[i] = matlistD[i]
-        
+
     xTW=np.concatenate([xT,xW])
     xTW2=np.concatenate([xT2,xW2])
-    yTW=np.concatenate([yT,yW])  
+    yTW=np.concatenate([yT,yW])
     if embed:
         xlabel = r"$N$"
     else:
         xlabel = r"Number of basis functions, $N$"
-    
+
     ylabel = r"Time to solution, $t$ (s)"
 
     plt.xscale('log')
     plt.yscale('log')
   #  plt.grid(which='major', axis='y')
     plt.xlabel(xlabel)
-    if not embed: 
+    if not embed:
         plt.ylabel(ylabel)
     plt.xlim(5e3, 1.1e6)
     plt.ylim(1, 1.1e4)
-    
+
 #    plotNNnz=1
 #     if plotNNnz:
 #         xT2=xT
@@ -269,7 +269,7 @@ def plotSIPsElementalScaling(embed=0):
 #         xTW2=xTW
 #         EmatrixSize= [EmatrixSize[i] * (EmatrixSize[i] +1) / 2 for i in range(len(EmatrixSize))]
 #         x=np.asarray([x[i] * (x[i] +1) / 2 for i in range(len(x))])
-    
+
     p1,=plt.plot(xT2, yT, linestyle='None', label="nanotube", marker='o', markersize=ms, mfc='b', mec='b')
     p2,=plt.plot(xW2, yW, linestyle='None', label='nanowire', marker='s', markersize=ms, mfc='g', mec='g')
     p3,=plt.plot(xD2, yD, linestyle='None', label='diamond', marker='d', markersize=ms, mfc='r', mec='r')
@@ -277,9 +277,9 @@ def plotSIPsElementalScaling(embed=0):
     p5,=plt.plot(EmatrixSize, EWtotalTime, linestyle='None', label='nanowire', marker='s', markersize=ms+2, mfc='none', mec='g')
     p6,=plt.plot(EmatrixSize, EDtotalTime, linestyle='None', label='diamond', marker='d', markersize=ms+2, mfc='none', mec='r')
     #p4,=plt.plot(EmatrixSize, EtotalTime, linestyle='None', label='Elemental', marker='*', markersize=ms+2, mfc='k', mec='k')
-    
 
-    
+
+
 
 
 #     myfit = getPowerFit(EmatrixSize, EtotalTime)
@@ -289,7 +289,7 @@ def plotSIPsElementalScaling(embed=0):
 #     myfit = getPowerFit(xW2, yW)
 #     mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
 #     f2,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='green')
-# 
+#
 #     myfit = getPowerFit(xT2, yT)
 #     mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
 #     f3,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='blue')
@@ -302,11 +302,11 @@ def plotSIPsElementalScaling(embed=0):
 #     z = getCubicFit(xT2, yT)
 #     mylabel=r'$t_{El}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
 #     f6,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='blue')
-#     
+#
 #     z = getCubicFit(xW2, yW)
 #     mylabel=r'$t_{El}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
 #     f7,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='green')
-    
+
 #     z = getCubicFit(xD2, yD)
 #     mylabel=r'$t_{SIPs}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
 #     f8,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='red')
@@ -314,7 +314,7 @@ def plotSIPsElementalScaling(embed=0):
        # plegend = plt.legend(handles=[f4,f1], loc='lower right',prop={'size':legendsize})
         #plt.gca().add_artist(plegend)
         plt.legend(handles=[f1,f4,p4],loc='upper left', prop={'size':legendsize},frameon=False)
-    else: 
+    else:
         plegend = plt.legend(handles=[p1,p2,p3,p4,p5,p6], loc='lower right',prop={'size':legendsize},ncol=2, title="SIPs                 Elemental")
         plt.gca().add_artist(plegend)
         plt.savefig("SIPs_El_scaling1.png")
@@ -326,17 +326,17 @@ def plotSIPsElementalScaling(embed=0):
         f4,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='blue')
       #  z = getCubicFit(EmatrixSize, EtotalTime)
        # mylabel=r'$t_{El}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
-    
+
       #  f5,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='black')
         plt.legend(handles=[f1,f4],loc='upper left', prop={'size':legendsize},frameon=False)
  #   plt.gca().get_yaxis().set_ticklabels([])
  #   fig.tight_layout()
     if not embed : plt.savefig("SIPs_El_scaling2.png")
-    
-    
+
+
     # plt.show()
     return
- 
+
 def binning(M, blockSize):
     size = M.shape[0]
     binNbr = int(ceil(size / blockSize))
@@ -346,7 +346,7 @@ def binning(M, blockSize):
     for i, j in itertools.izip(M.row, M.col):
         bins[(i // blockSize, j // blockSize)] += 1
     return bins
- 
+
 def doScalingFigure():
     # strong and weak scaling plots
     font = {'weight' : 'normal',
@@ -356,12 +356,12 @@ def doScalingFigure():
     WmatrixSize, WnCores, Wratios, WsetupTime,WsolveTime, WtotalTime, Wncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_W.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
     DmatrixSize, DnCores, Dratios, DsetupTime,DsolveTime, DtotalTime, Dncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_D.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
 
-    ratiosT = [2000, 1000, 500, 250, 125, 62.5]  # ,192]            
-    ratiosW = [2000, 1000, 500, 250, 125, 62.5]  # ,192]            
-    ratiosD = [2000, 1000, 500, 250, 125, 62.5]  # ,192]            
-    ratiosT = [2000, 1000, 500, 250]  # ,192]            
-    ratiosW = [2000, 1000, 500, 250]  # ,192]            
-    ratiosD = [2000, 1000, 500, 250]  # ,192]            
+    ratiosT = [2000, 1000, 500, 250, 125, 62.5]  # ,192]
+    ratiosW = [2000, 1000, 500, 250, 125, 62.5]  # ,192]
+    ratiosD = [2000, 1000, 500, 250, 125, 62.5]  # ,192]
+    ratiosT = [2000, 1000, 500, 250]  # ,192]
+    ratiosW = [2000, 1000, 500, 250]  # ,192]
+    ratiosD = [2000, 1000, 500, 250]  # ,192]
     xticklabel = [ 8000,32000, 128000,512000]
 
     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 6.5))
@@ -375,7 +375,7 @@ def doScalingFigure():
     plt.ylabel(ylabel)
     mymarker = itertools.cycle(list('o^sd*h>v<*'))
     mycolorRGB = itertools.cycle(list('rgbk'))
-        
+
     legendsize = 15
     ms = 8
     for i in range(len(ratiosT)):
@@ -395,15 +395,15 @@ def doScalingFigure():
     bottom='off',      # ticks along the bottom edge are off
     top='off',         # ticks along the top edge are off
     labelbottom='on') # labels along the bottom edge are off
-    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel)) 
-    
-    
+    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+
+
     plt.subplot(1, 3, 2)
     plt.xscale('log')
     plt.yscale('log')
     plt.xlim(5000, 1e6)
     plt.ylim(10, 1e4)
-    plt.grid(which='major', axis='y')  
+    plt.grid(which='major', axis='y')
     xlabel = "Number of basis functions"
     plt.xlabel(xlabel)
     mymarker = itertools.cycle(list('o^sd*h>v<*'))
@@ -416,7 +416,7 @@ def doScalingFigure():
         currentmarker = next(mymarker)
         currentcolor = next(mycolorRGB)
         plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)    
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
     plt.legend(loc='upper right', prop={'size':legendsize})
     plt.xlim(5000, 1e6)
     plt.ylim(10, 1e4)
@@ -428,12 +428,12 @@ def doScalingFigure():
     top='off',         # ticks along the top edge are off
     labelbottom='on') # labels along the bottom edge are off
     plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-    
+
     plt.subplot(1, 3, 3)
     plt.xscale('log')
     plt.yscale('log')
     plt.grid(which='major', axis='y')
-    mymarker = itertools.cycle(list('o^sd*h>v<*'))   
+    mymarker = itertools.cycle(list('o^sd*h>v<*'))
     for i in range(len(ratiosD)):
         x = DmatrixSize[np.logical_and(Dratios == ratiosD[i], Dncoresperslice == 16)]
         y = DtotalTime[np.logical_and(Dratios == ratiosD[i], Dncoresperslice == 16)]
@@ -443,7 +443,7 @@ def doScalingFigure():
         currentmarker = next(mymarker)
         currentcolor = next(mycolorRGB)
         plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)    
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
 
     plt.legend(loc='upper right', prop={'size':legendsize})
     plt.xlim(5000, 1e6)
@@ -455,17 +455,17 @@ def doScalingFigure():
     bottom='off',      # ticks along the bottom edge are off
     top='off',         # ticks along the top edge are off
     labelbottom='on') # labels along the bottom edge are off
-    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))    
-    
+    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+
     fig.tight_layout()
     plt.savefig("SIPs_weak.png")
-    
+
     # strong scaling
     # strong scaling
     # strong scaling
 #     font = {'weight' : 'normal',
 #         'size'   : 16}
-#     matplotlib.rc('font', **font)    
+#     matplotlib.rc('font', **font)
     matlistD = [8000, 16000, 32000, 64000]
     matlistW = [8000, 32000, 128000]
     matlistT = [8000, 64000, 512000]
@@ -474,7 +474,7 @@ def doScalingFigure():
     nAmdahl=3
     xlabel = "Number of cores"
     ylabel = "Time to solution (s)"
-    
+
     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 6.5))
   #  fig, axes = plt.subplots(nrows=1, ncols=3,figsize=(9.5,3.5))
 
@@ -497,20 +497,20 @@ def doScalingFigure():
             tsVec=TsetupTime[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 16)]
             ts=sum(tsVec)/len(tsVec)
             xAmdahl=getExtendedArray(x, 1e7)
-            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0])) 
-            if (nAmdahl==1): 
+            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0]))
+            if (nAmdahl==1):
                 plt.plot(xAmdahl, yAmdahl, linestyle='--', label="Amdahl's law", marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-            else:   
+            else:
                 plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-   
+
         x1 = TnCores[(TmatrixSize == matlistT[i])]
         y1 = TtotalTime[(TmatrixSize == matlistT[i])]
         x2 = TnCores[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 32)]
         y2 = TtotalTime[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 32)]
 
-        
+
         plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)    
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
         plt.plot(sorted(x1), [sorted(y1, reverse=True)[0] / (sorted(x1)[i] / sorted(x1)[0]) for i in range(len(x1))], linestyle='-', color=currentcolor)
 
     plt.legend(loc='upper right', prop={'size':legendsize})
@@ -521,7 +521,7 @@ def doScalingFigure():
     plt.yscale('log')
     plt.xlim(myxlim)
     plt.ylim(1, 1e4)
-    plt.grid(which='major', axis='y')   
+    plt.grid(which='major', axis='y')
     mymarker = itertools.cycle(list('o^sd*h>v<*'))
     mycolorRGB = itertools.cycle(list('rgbk'))
     for i in range(len(matlistW)):
@@ -538,20 +538,20 @@ def doScalingFigure():
             tsVec=WsetupTime[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 16)]
             ts=sum(tsVec)/len(tsVec)
             xAmdahl=getExtendedArray(x, 1e7)
-            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0])) 
-            if (nAmdahl==1): 
+            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0]))
+            if (nAmdahl==1):
                 plt.plot(xAmdahl, yAmdahl, linestyle='--', label="Amdahl's law", marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-            else:   
+            else:
                 plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-            
+
         plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)    
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
         plt.plot(sorted(x1), [sorted(y1, reverse=True)[0] / (sorted(x1)[i] / sorted(x1)[0]) for i in range(len(x1))], linestyle='-', color=currentcolor)
-    plt.gca().get_yaxis().set_ticklabels([])    
+    plt.gca().get_yaxis().set_ticklabels([])
     plt.legend(loc='upper right', prop={'size':legendsize})
     plt.xlabel(xlabel)
    # plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-    
+
     plt.subplot(1, 3, 3)
     plt.xscale('log',basex=2)
     plt.yscale('log')
@@ -574,21 +574,21 @@ def doScalingFigure():
             tsVec=DsetupTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 16)]
             ts=sum(tsVec)/len(tsVec)
             xAmdahl=getExtendedArray(x, 1e7)
-            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0])) 
-            if (nAmdahl==1): 
+            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0]))
+            if (nAmdahl==1):
                 plt.plot(xAmdahl, yAmdahl, linestyle='--', label="Amdahl's law", marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-            else:   
+            else:
                 plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
         if i==3:
             print matlistD[i]
             tsVec=DsetupTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 64)]
             ts=sum(tsVec)/len(tsVec)
             xAmdahl=getExtendedArray(x2, 1e7)
-            yAmdahl=getAmdahlLaw(y2[0], ts, xAmdahl/float(x2[0])) 
+            yAmdahl=getAmdahlLaw(y2[0], ts, xAmdahl/float(x2[0]))
             plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
 
         plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)    
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
         plt.plot(sorted(x1), [sorted(y1, reverse=True)[0] / (sorted(x1)[i] / sorted(x1)[0]) for i in range(len(x1))], linestyle='-', color=currentcolor)
     plt.gca().get_yaxis().set_ticklabels([])
     plt.legend(loc='lower left', prop={'size':legendsize})
@@ -596,7 +596,65 @@ def doScalingFigure():
 
     fig.tight_layout()
     plt.savefig("SIPs_strong.png")
-    
+
+    # plt.show()
+    return
+
+def doTOCFigure():
+    """
+    Generate SIPs strong scaling plot for CNT512000, DNW64000, BDC8000 examples
+    """
+    font = {'weight' : 'normal',
+        'size'   : 8,
+        'family' : 'sans-serif'}
+    matplotlib.rc('font', **font)
+    mymarker = itertools.cycle(list('o^sd*h>v<*'))
+    mycolorRGB = itertools.cycle(list('rgbk'))
+
+    TmatrixSize, TnCores, Tratios, TsetupTime,TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T2.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
+    WmatrixSize, WnCores, Wratios, WsetupTime,WsolveTime, WtotalTime, Wncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_W2.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
+    DmatrixSize, DnCores, Dratios, DsetupTime,DsolveTime, DtotalTime, Dncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_D.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
+
+
+    matlistD = [8000]
+    matlistW = [64000]
+    matlistT = [512000]
+    xticklabel=[16,64,256, 1024,4096,16384,65536 ,266144]
+    nAmdahl=3
+    xlabel = "Number of cores"
+    ylabel = "Time (s)"
+    ms=4
+    fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(3, 1.75))
+  #  fig, axes = plt.subplots(nrows=1, ncols=3,figsize=(9.5,3.5))
+
+    plt.subplot(1, 1, 1)
+    plt.xscale('log',basex=10)
+    plt.yscale('log')
+   # plt.grid(which='major', axis='y')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.xlim([9.5,1.5e6])
+    plt.ylim(10, 1e4)
+
+    for i in range(len(matlistT)):
+        myLabel = r'$N=$' + str(matlistT[i])
+        x = TnCores[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice > 15)]
+        y = TtotalTime[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice > 15)]
+        plt.plot(x, y, linestyle='None', label=myLabel, marker='o', markersize=ms, mfc='b', mec='b')
+
+    for i in range(len(matlistW)):
+        x = WnCores[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice >15)]
+        y = WtotalTime[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice > 15)]
+        plt.plot(x, y, linestyle='None', label=myLabel, marker='s', markersize=ms, mfc='g', mec='g')
+
+    for i in range(len(matlistD)):
+        x = DnCores[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 16)]
+        y = DtotalTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 16)]
+        plt.plot(x, y, linestyle='None', label=myLabel, marker='d', markersize=ms, mfc='r', mec='r')
+
+    fig.tight_layout()
+    plt.savefig("SIPs_TOC.pdf")
+
     # plt.show()
     return
 
@@ -612,29 +670,29 @@ def doFactorizationStronScalingFigure():
     ms = 5
     nCores,matSize,symTime, numTime,fType = np.genfromtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/'+datafile, unpack=True,usecols=(1, 2,3,4,5))
    #  fName = np.genfromtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_max_factorization.txt', unpack=True, usecols=(0),dtype=None)
- 
+
 
     xlabel = "Number of cores"
     ylabel = "Walltime (s)"
 
-    
+
     fig, _ = plt.subplots(nrows=1, ncols=3, figsize=(9.5, 3.5))
 
     mymarker = itertools.cycle(list('osd*h>v<*'))
     mycolor = itertools.cycle(list('bgrgbk'))
   #  fList=['tube', 'wire', 'diamond']
-    mList=[512000,128000,64000]    
+    mList=[512000,128000,64000]
     for i in range(3):
         plt.subplot(1, 3, i+1)
     #    xMin = nCores[np.logical_and(matSize==8000,fList[i] in fName)] # gave false for fList in condition
         xMin = nCores[np.logical_and(matSize==8000,fType==i)]
-        yMinSym = symTime[np.logical_and(matSize==8000,fType==i)]        
-        yMinNum = numTime[np.logical_and(matSize==8000,fType==i)] 
-        yMinTot = yMinSym + 2.0 * yMinNum       
+        yMinSym = symTime[np.logical_and(matSize==8000,fType==i)]
+        yMinNum = numTime[np.logical_and(matSize==8000,fType==i)]
+        yMinTot = yMinSym + 2.0 * yMinNum
         xMax=nCores[np.logical_and(matSize==mList[i],fType==i)]
-        yMaxSym = symTime[np.logical_and(matSize==mList[i],fType==i)]        
-        yMaxNum = numTime[np.logical_and(matSize==mList[i],fType==i)] 
-        yMaxTot = yMaxSym + 2.0 * yMaxNum       
+        yMaxSym = symTime[np.logical_and(matSize==mList[i],fType==i)]
+        yMaxNum = numTime[np.logical_and(matSize==mList[i],fType==i)]
+        yMaxTot = yMaxSym + 2.0 * yMaxNum
       #  currentmarker = mymarker.next()
         plt.xscale('log',basex=2)
         plt.yscale('log')
@@ -656,7 +714,7 @@ def doFactorizationStronScalingFigure():
 
     fig.tight_layout()
     plt.savefig("SIPs_factorization_strong_scaling.png")
-    
+
     # plt.show()
     return
 
@@ -672,29 +730,29 @@ def doFactorizationStronScalingFigure2():
     ms = 6
     nCores,matSize,symTime, numTime,fType = np.genfromtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/'+datafile, unpack=True,usecols=(1, 2,3,4,5))
    #  fName = np.genfromtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_max_factorization.txt', unpack=True, usecols=(0),dtype=None)
- 
+
 
     xlabel = "Number of cores"
     ylabel = "Walltime (s)"
 
-    
+
     fig, _ = plt.subplots(nrows=1, ncols=3, figsize=(9.5, 3.5))
 
     mymarker = itertools.cycle(list('osd*h>v<*'))
     mycolor = itertools.cycle(list('bgrgbk'))
   #  fList=['tube', 'wire', 'diamond']
-    mList=[512000,128000,64000]    
+    mList=[512000,128000,64000]
     for i in range(3):
         plt.subplot(1, 3, i+1)
     #    xMin = nCores[np.logical_and(matSize==8000,fList[i] in fName)] # gave false for fList in condition
         xMin = nCores[np.logical_and(matSize==8000,fType==i)]
-        yMinSym = symTime[np.logical_and(matSize==8000,fType==i)]        
-        yMinNum = numTime[np.logical_and(matSize==8000,fType==i)] 
-        yMinTot = yMinSym + 2.0 * yMinNum       
+        yMinSym = symTime[np.logical_and(matSize==8000,fType==i)]
+        yMinNum = numTime[np.logical_and(matSize==8000,fType==i)]
+        yMinTot = yMinSym + 2.0 * yMinNum
         xMax=nCores[np.logical_and(matSize==mList[i],fType==i)]
-        yMaxSym = symTime[np.logical_and(matSize==mList[i],fType==i)]        
-        yMaxNum = numTime[np.logical_and(matSize==mList[i],fType==i)] 
-        yMaxTot = yMaxSym + 2.0 * yMaxNum       
+        yMaxSym = symTime[np.logical_and(matSize==mList[i],fType==i)]
+        yMaxNum = numTime[np.logical_and(matSize==mList[i],fType==i)]
+        yMaxTot = yMaxSym + 2.0 * yMaxNum
       #  currentmarker = mymarker.next()
         plt.xscale('log',basex=2)
         plt.yscale('log')
@@ -716,13 +774,13 @@ def doFactorizationStronScalingFigure2():
             plt.legend(loc='lower left', prop={'size':legendsize},ncol=1)
         xticklabel = [ 16,32, 64,128, 256, 512]
         plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-        if i>0: plt.gca().get_yaxis().set_ticklabels([]) 
+        if i>0: plt.gca().get_yaxis().set_ticklabels([])
 
 
 
     fig.tight_layout()
     figureFile=sys._getframe().f_code.co_name[2:]+".eps"
-    plt.savefig(figureFile) 
+    plt.savefig(figureFile)
     return
 
 def doOneSliceFigure():
@@ -735,32 +793,32 @@ def doOneSliceFigure():
     x3 = T_nCores[(T_size == 8000)]
     y3 = T_totalTime[(T_size == 8000)]
     x4 = [1, 2, 4, 8, 16, 64, 256, 1024, 4096, 16384]
- 
+
     tSetupVec=setupTime[(nSlices > 1)]
     tSetup=sum(tSetupVec)/len(tSetupVec)
     xAmdahl=getExtendedArray(x2, 40000)
-    yAmdahl=getAmdahlLaw(y[0], tSetup, xAmdahl)  
-    
+    yAmdahl=getAmdahlLaw(y[0], tSetup, xAmdahl)
+
     tSetupVec2=T_setupTime[(T_size == 8000)]
     tSetup2=sum(tSetupVec2)/len(tSetupVec2)
     xAmdahl2=getExtendedArray(x3, 40000)
-    yAmdahl2=getAmdahlLaw(y3[0], tSetup2, xAmdahl2/16.0) 
-      
+    yAmdahl2=getAmdahlLaw(y3[0], tSetup2, xAmdahl2/16.0)
+
     plt.figure()
     ls=14
     fs=14
     font = {'weight' : 'normal',
         'size'   : fs}
-    matplotlib.rc('font', **font)   
-     
+    matplotlib.rc('font', **font)
+
     plt.xscale('log',basex=2)
     plt.yscale('log')
     plt.xlabel('Number of cores')
-    plt.ylabel('Time to solution (s)')    
+    plt.ylabel('Time to solution (s)')
     plt.xticks(x4, map(lambda i : "%d" % i, x4))
     plt.xlim([0.5, 35000])
     plt.ylim([0.1, 5000])
-    
+
     plt.plot(x, y, label='single slice', linestyle='None', marker='o', markersize=8, color='black')
     plt.plot(x4, [y[0] / (x4[i] / x4[0]) for i in range(len(x4))], linestyle='-', color='black')
     plt.plot(x2, y2, label='one core per slice', linestyle='None', marker='s', markersize=8, color='red')
@@ -773,13 +831,13 @@ def doOneSliceFigure():
     plt.savefig('SIPs_single_slice2.eps')
 
     plt.plot(x3, y3, label='16 cores per slice', linestyle='None', marker='d', markersize=8, color='blue')
-    plt.plot(x3, [y3[0] / (x3[i] / x3[0]) for i in range(len(x3))], linestyle='-', color='blue')    
+    plt.plot(x3, [y3[0] / (x3[i] / x3[0]) for i in range(len(x3))], linestyle='-', color='blue')
     plt.plot(xAmdahl2,yAmdahl2 , linestyle='--', marker='.', color='blue')
     plt.legend(loc='lower left', prop={'size':ls})
     plt.savefig('SIPs_single_slice3.eps')
 
  #   plt.plot(x3,tAmdahl , label="Amdahl's law", linestyle='--', marker='.', color='red')
-    
+
 
     return
 
@@ -813,14 +871,14 @@ def doOneSliceProfileFigure():
     y2 = symTime[(nSlices > 1)]
     plt.plot(x2, y2, label='sym. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='red', mec='red')
 
-    plt.ylabel('Walltime (s)')  
+    plt.ylabel('Walltime (s)')
     plt.legend(loc='upper right', prop={'size':mylegendsize})
     plt.xscale('log',basex=2)
     plt.yscale('log')
     plt.xlim(myxlim)
     plt.ylim(myylim)
     plt.gca().get_xaxis().set_ticklabels([])
-    
+
     plt.subplot(2, 2, 2)
     y = numTime[(nSlices == 1)]
     plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
@@ -828,11 +886,11 @@ def doOneSliceProfileFigure():
     x2 = nCores[(nSlices > 1)]
     y2 = numTime[(nSlices > 1)]
     plt.plot(x2, y2, label='num. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='red', mec='red')
-    
+
     xAmdahl=getExtendedArray(x, 2e5)
-    tAmdahl=getAmdahlLaw(y[0], y[0]/64.0, xAmdahl) 
+    tAmdahl=getAmdahlLaw(y[0], y[0]/64.0, xAmdahl)
     plt.plot(xAmdahl,tAmdahl , linestyle='--', marker='.', color='red')
-    
+
     plt.legend(loc='upper right', prop={'size':mylegendsize})
     plt.xscale('log',basex=2)
     plt.yscale('log')
@@ -841,7 +899,7 @@ def doOneSliceProfileFigure():
     plt.gca().get_xaxis().set_ticklabels([])
     plt.gca().get_yaxis().set_ticklabels([])
 
-    
+
     plt.subplot(2, 2, 3)
     y = solTime[(nSlices == 1)]
     plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
@@ -850,14 +908,14 @@ def doOneSliceProfileFigure():
     y2 = solTime[(nSlices > 1)]
     plt.plot(x2, y2, label='sol. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='red', mec='red')
     plt.xlabel('Number of cores')
-    plt.ylabel('Walltime (s)')  
+    plt.ylabel('Walltime (s)')
     plt.legend(loc='upper right', prop={'size':mylegendsize})
     plt.xscale('log',basex=2)
     plt.yscale('log')
     plt.xlim(myxlim)
     plt.ylim(myylim)
     plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-    
+
     plt.subplot(2, 2, 4)
     y = ortTime[(nSlices == 1)]
     plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
@@ -870,7 +928,7 @@ def doOneSliceProfileFigure():
     plt.xlim(myxlim)
     plt.ylim(myylim)
     plt.xlabel('Number of cores')
-    plt.gca().get_yaxis().set_ticklabels([])  
+    plt.gca().get_yaxis().set_ticklabels([])
     plt.legend(loc='upper right', prop={'size':mylegendsize})
     plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
     fig.tight_layout()
@@ -892,11 +950,11 @@ def makeElementalPlots():
     plt.figure()
     plt.xscale('log')
     plt.yscale('log')
-    plt.grid(which='major', axis='y') 
+    plt.grid(which='major', axis='y')
     plt.xlabel(xlabel)
-    plt.ylabel(ylabel)  
+    plt.ylabel(ylabel)
     plt.xlim(5e3, 5e5)
-    plt.ylim(5, 8000) 
+    plt.ylim(5, 8000)
     plt.plot(mSize,t1024,linestyle='None', label='16384 cores', marker=mymarker.next(), markersize=ms, mfc=mycolor.next())
     plt.plot(mSize,t256,linestyle='None', label='4096cores', marker=mymarker.next(), markersize=ms, mfc=mycolor.next())
     plt.plot(mSize,t64,linestyle='None', label='1024 cores', marker=mymarker.next(), markersize=ms, mfc=mycolor.next())
@@ -916,7 +974,7 @@ def doSIPsScalingPlots():
     TmatrixSize, TnCores, Tratios, TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
     WmatrixSize, WnCores, Wratios, WsolveTime, WtotalTime, Wncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_W.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
     DmatrixSize, DnCores, Dratios, DsolveTime, DtotalTime, Dncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_D.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
- 
+
     matrixSize,Tnnz,Wnnz,Dnnz = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_fillin.txt", unpack=True, usecols=(0,4,5,6))
 
     xlabel = r"$N \cdot N_{nz}$"
@@ -925,9 +983,9 @@ def doSIPsScalingPlots():
     matlistD = [8000, 16000, 32000]
     matlistW = [8000, 16000, 32000, 64000, 128000]
     matlistT = [8000, 16000, 32000,64000, 128000,256000, 512000]
-    
+
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4.5))
-   
+
     plt.subplot(1,2,1)
     plt.xscale('log')
     plt.yscale('log')
@@ -938,7 +996,7 @@ def doSIPsScalingPlots():
     plt.ylim(1, 2e3)
     mymarker = itertools.cycle(list('o^sd*h>v<*'))
     mycolorRGB = itertools.cycle(list('rgbk'))
-        
+
     myLabel = "nanotube"
     x=np.zeros(len(matlistT))
     y=np.zeros(len(matlistT))
@@ -967,10 +1025,10 @@ def doSIPsScalingPlots():
     plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
     xx[7:12]=x
     yy[7:12]=y
-    
+
     myLabel = "diamond"
     x=np.zeros(len(matlistD))
-    y=np.zeros(len(matlistD))  
+    y=np.zeros(len(matlistD))
     for i in range(len(matlistD)):
         y[i] = DsolveTime[np.logical_and(np.logical_and(DnCores == 16384,DmatrixSize == matlistD[i]), Dncoresperslice == 16)]
         x[i] = matlistD[i]*Dnnz[matrixSize == matlistD[i]]
@@ -978,16 +1036,16 @@ def doSIPsScalingPlots():
     currentmarker = 'd'
     currentcolor = 'r'
     plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-   
+
     myfit = getPowerFit(x, y)
     plt.plot(x, myfit[0], label='$y={0:.2E}x^{{{1:.2f}}}$'.format(myfit[1], myfit[2]), linestyle='--', color='red')
 
     myfit = getPowerFit(xx, yy)
     plt.plot(xx, myfit[0], label='$y={0:.2E}x^{{{1:.2f}}}$'.format(myfit[1], myfit[2]), linestyle='-', color='blue')
-    
+
     plt.legend(loc='lower right', prop={'size':legendsize},ncol=2)
-    
-    
+
+
     plt.subplot(1,2,2)
 
     xlabel = "$N $"
@@ -1001,7 +1059,7 @@ def doSIPsScalingPlots():
     plt.ylim(1, 2e3)
     mymarker = itertools.cycle(list('o^sd*h>v<*'))
     mycolorRGB = itertools.cycle(list('rgbk'))
-        
+
     myLabel = "nanotube"
     x=np.zeros(len(matlistT))
     y=np.zeros(len(matlistT))
@@ -1030,10 +1088,10 @@ def doSIPsScalingPlots():
     plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
     xx[7:12]=x
     yy[7:12]=y
-    
+
     myLabel = "diamond"
     x=np.zeros(len(matlistD))
-    y=np.zeros(len(matlistD))  
+    y=np.zeros(len(matlistD))
     for i in range(len(matlistD)):
         y[i] = DsolveTime[np.logical_and(np.logical_and(DnCores == 16384,DmatrixSize == matlistD[i]), Dncoresperslice == 16)]
         x[i] = matlistD[i]
@@ -1041,15 +1099,15 @@ def doSIPsScalingPlots():
     currentmarker = 'd'
     currentcolor = 'r'
     plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-   
+
     myfit = getPowerFit(x, y)
     plt.plot(x, myfit[0], label='$y={0:.2E}x^{{{1:.2f}}}$'.format(myfit[1], myfit[2]), linestyle='--', color='red')
 
     myfit = getPowerFit(xx, yy)
     plt.plot(xx, myfit[0], label='$y={0:.2E}x^{{{1:.2f}}}$'.format(myfit[1], myfit[2]), linestyle='-', color='blue')
-    
+
     plt.legend(loc='lower right', prop={'size':legendsize},ncol=2)
-    
+
 #     xticklabel = [ 8000,32000,128000, 512000]
 #     plt.tick_params(\
 #     axis='x',          # changes apply to the x-axis
@@ -1058,10 +1116,10 @@ def doSIPsScalingPlots():
 #     top='off',         # ticks along the top edge are off
 #     labelbottom='on') # labels along the bottom edge are off
 #     plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-    
+
     fig.tight_layout()
     plt.savefig("SIPs_scaling_1d-3d.png")
-    
+
     # plt.show()
     return
 
@@ -1080,13 +1138,13 @@ def doSIPsScalingFigure():
     TmatrixSize, TnCores, Tratios, TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
     WmatrixSize, WnCores, Wratios, WsolveTime, WtotalTime, Wncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_W.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
     DmatrixSize, DnCores, Dratios, DsolveTime, DtotalTime, Dncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_D.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
- 
+
     matrixSize,Tnnz,Wnnz,Dnnz = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_fillin.txt", unpack=True, usecols=(0,4,5,6))
 
     matlistD = [8000, 16000, 32000, 64000]
     matlistW = [8000, 16000, 32000, 64000, 128000]
     matlistT = [8000, 16000, 32000,64000, 128000,256000, 512000]
-    
+
     xT=np.zeros(len(matlistT))
     xT2=np.zeros(len(matlistT))
     yT=np.zeros(len(matlistT))
@@ -1106,18 +1164,18 @@ def doSIPsScalingFigure():
 
     xD=np.zeros(len(matlistD))
     xD2=np.zeros(len(matlistD))
-    yD=np.zeros(len(matlistD))  
+    yD=np.zeros(len(matlistD))
     for i in range(len(matlistD)):
         yD[i] = min(DsolveTime[np.logical_and(DnCores == 16384,DmatrixSize == matlistD[i])])
         xD[i] = matlistD[i]*Dnnz[matrixSize == matlistD[i]]
         xD2[i] = matlistD[i]
-        
+
     xTW=np.concatenate([xT,xW])
     xTW2=np.concatenate([xT2,xW2])
-    yTW=np.concatenate([yT,yW])   
-        
+    yTW=np.concatenate([yT,yW])
+
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4.5))
-   
+
     xlabel = r"$N \cdot N_{nz}$"
     ylabel = "Time to solution, $t$ (s)"
     plt.subplot(1,2,1)
@@ -1128,14 +1186,14 @@ def doSIPsScalingFigure():
     plt.ylabel(ylabel)
     plt.xlim(1e10, 1.8e14)
     plt.ylim(1, 2e6)
-        
+
     p1,= plt.plot(xT, yT, linestyle='None', label="nanotube", marker='o', markersize=ms, mfc='b', mec='b')
     p2,= plt.plot(xW, yW, linestyle='None', label='nanowire', marker='s', markersize=ms, mfc='g', mec='g')
     p3,= plt.plot(xD, yD, linestyle='None', label='diamond', marker='d', markersize=ms, mfc='r', mec='r')
-    
+
     plegend = plt.legend(handles=[p1,p2,p3], loc='upper left', prop={'size':legendsize})
     plt.gca().add_artist(plegend)
-    
+
     myfit = getPowerFit(xD, yD)
     mylabel=r'$t_{SIPs}=$'+getSciNotation(myfit[1])+r'$(N\cdot N_{{nz}})^{{{0:.2f}}}$'.format(myfit[2])
     f1,=plt.plot(xD, myfit[0], label=mylabel, linestyle='--', color='red')
@@ -1143,10 +1201,10 @@ def doSIPsScalingFigure():
     myfit = getPowerFit(xTW, yTW)
     mylabel=r'$t_{SIPs}=$'+getSciNotation(myfit[1])+r'$(N\cdot N_{{nz}})^{{{0:.2f}}}$'.format(myfit[2])
     f2,=plt.plot(xTW, myfit[0], label=mylabel, linestyle='--', color='blue')
-    
+
     plt.legend(handles=[f1,f2],loc='upper right', prop={'size':legendsize})
-    
-    
+
+
     plt.subplot(1,2,2)
 
 #     xlabel = "$N$"
@@ -1156,32 +1214,32 @@ def doSIPsScalingFigure():
 #     plt.xlabel(xlabel)
 #     plt.xlim(5e3, 6e5)
 #     plt.ylim(1, 2e3)
-#     
+#
 #     p1,=plt.plot(xT2, yT, linestyle='None', label="nanotube", marker='o', markersize=ms, mfc='b', mec='b')
 #     p2,=plt.plot(xW2, yW, linestyle='None', label='nanowire', marker='s', markersize=ms, mfc='g', mec='g')
 #     p3,=plt.plot(xD2, yD, linestyle='None', label='diamond', marker='d', markersize=ms, mfc='r', mec='r')
-#     
+#
 #   #  plegend = plt.legend(handles=[p1,p2,p3], loc='upper left')
 #    # plt.gca().add_artist(plegend)
-#     
+#
 #     myfit = getPowerFit(xD2, yD)
 #     mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
 #     f1,=plt.plot(xD2, myfit[0], label=mylabel, linestyle='--', color='red')
-# 
+#
 #     myfit = getPowerFit(xTW2, yTW)
 #     mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
 #     f2,=plt.plot(xTW2, myfit[0], label=mylabel, linestyle='-', color='blue')
-#     
+#
 #     plt.legend(handles=[f1,f2],loc='lower right', prop={'size':legendsize})
 #     plt.gca().get_yaxis().set_ticklabels([])
     plotSIPsElementalScaling(1)
     plt.gca().get_yaxis().set_ticklabels([])
-    
-    
-    
+
+
+
     fig.tight_layout()
     figureFile=sys._getframe().f_code.co_name[2:]+".eps"
-    plt.savefig(figureFile)     
+    plt.savefig(figureFile)
     # plt.show()
     return
 
@@ -1196,7 +1254,7 @@ def doNonzerosFigure():
     mycolor=['blue','green','red','blue','green','red']
     mymarker=['o','s','d','o','s','d']
     mymfc=['none','none','none','blue','green','red']
-    
+
     plt.figure()
     font = {'weight' : 'normal',
         'size'   : 14}
@@ -1211,7 +1269,7 @@ def doNonzerosFigure():
     plt.ylabel("Number of nonzeros")
     plt.xlim([5E3, 1E6])
     plt.ylim([1E5, 1E12])
-    plt.grid(which='major', axis='y') 
+    plt.grid(which='major', axis='y')
     xticklabel = [ 8000,32000,128000, 512000]
    # xticklabel2 = [ 8,32,128, 512]
     plt.tick_params(\
@@ -1225,25 +1283,25 @@ def doNonzerosFigure():
     for n in range(6):#[5,4,3,2,1,0]:
         y=mydata[n+1]
         plt.plot(x, y, label=mylabel[n], linestyle='None', marker=mymarker[n], markersize=8, mfc=mymfc[n],mec=mycolor[n], color=mycolor[n])
-        plt.plot(x, [y[0] * (x[i] / x[0]) for i in range(len(x))], linestyle='--', color=mycolor[n]) 
+        plt.plot(x, [y[0] * (x[i] / x[0]) for i in range(len(x))], linestyle='--', color=mycolor[n])
         if n==5:
             myfit = getPowerFit(x[:4], y[:4])
             amp=myfit[1]
             index=myfit[2]
             fitlabel=r'$N_{nz}=$'+r'${0:.2f}N^{{{1:.2f}}}$'.format(myfit[1], myfit[2])
-            plt.plot(x, amp * (x ** index), label=fitlabel, linestyle=':', color='red') 
-        if n==2:    
-            plt.plot(x, [x[i] * (x[i]+1) / 2 for i in range(len(x))], marker='*', label='dense', ms=12, linestyle='-', color='black')       
+            plt.plot(x, amp * (x ** index), label=fitlabel, linestyle=':', color='red')
+        if n==2:
+            plt.plot(x, [x[i] * (x[i]+1) / 2 for i in range(len(x))], marker='*', label='dense', ms=12, linestyle='-', color='black')
             plt.legend(loc='upper left', prop={'size':legendsize},ncol=1)
             figureFile=func+"1.eps"
-            plt.savefig(figureFile) 
+            plt.savefig(figureFile)
 
     #matplotlib.rc('text', usetex=True)
     plt.legend(loc='upper left', prop={'size':legendsize},ncol=2)
 
     #plt.savefig("SIPs_nonzeros.png")
     figureFile=func+".eps"
-    plt.savefig(figureFile) 
+    plt.savefig(figureFile)
     return
 
 def plotNonzerosFigure():
@@ -1254,7 +1312,7 @@ def plotNonzerosFigure():
     mycolor=['blue','green','red','blue','green','red']
     mymarker=['o','s','d','o','s','d']
     mymfc=['none','none','none','blue','green','red']
-    
+
     plt.figure()
     x = mydata[0]
     for n in [5,4,3]:
@@ -1264,10 +1322,10 @@ def plotNonzerosFigure():
             amp=myfit[1]
             index=myfit[2]
             fitlabel=r'$N_{nz}=$'+r'${0:.2f}N^{{{1:.2f}}}$'.format(myfit[1], myfit[2])
-            plt.plot(x, amp * (x ** index), label=fitlabel, linestyle=':', color='red') 
+            plt.plot(x, amp * (x ** index), label=fitlabel, linestyle=':', color='red')
         plt.plot(x, y, label=mylabel[n], linestyle='None', marker=mymarker[n], markersize=8, mfc=mymfc[n],mec=mycolor[n], color=mycolor[n])
-        plt.plot(x, [y[0] * (x[i] / x[0]) for i in range(len(x))], linestyle='--', color=mycolor[n]) 
-        if n==3:    plt.plot(x, np.multiply(x, x), marker='*', label='dense', ms=12, linestyle='-', color='black')       
+        plt.plot(x, [y[0] * (x[i] / x[0]) for i in range(len(x))], linestyle='--', color=mycolor[n])
+        if n==3:    plt.plot(x, np.multiply(x, x), marker='*', label='dense', ms=12, linestyle='-', color='black')
 
     #matplotlib.rc('text', usetex=True)
     plt.xscale('log',basex=2)
@@ -1277,7 +1335,7 @@ def plotNonzerosFigure():
     plt.ylabel("Number of nonzeros")
     plt.xlim([5E3, 1E6])
     plt.ylim([1E6, 1E12])
-    plt.grid(which='major', axis='y') 
+    plt.grid(which='major', axis='y')
     xticklabel = [ 8000,32000,128000, 512000]
    # xticklabel2 = [ 8,32,128, 512]
     plt.tick_params(\
@@ -1288,9 +1346,9 @@ def plotNonzerosFigure():
     labelbottom='on') # labels along the bottom edge are off
     plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
     plt.legend(loc='upper left', prop={'size':14},ncol=1)
-    plt.savefig("SIPs_nonzeros.eps") 
+    plt.savefig("SIPs_nonzeros.eps")
     return
-    
+
 
 
 def makeProfilePlots():
@@ -1326,7 +1384,7 @@ def makeProfilePlots():
   #  plt.xlabel('Number of cores')
   #  plt.ylabel('Walltime (s)')
     frame2 = plt.gca()
-    frame2.get_xaxis().set_ticklabels([])  
+    frame2.get_xaxis().set_ticklabels([])
     frame2.get_yaxis().set_ticklabels([])
     plt.legend(loc='lower left', prop={'size':10})
 
@@ -1361,7 +1419,7 @@ def makeProfilePlots():
     frame4 = plt.gca()
     frame4.get_yaxis().set_ticklabels([])
     plt.legend(loc='lower left', prop={'size':10})
-    
+
    # fig.tight_layout()
     plt.savefig('profile.png')
     return
@@ -1395,7 +1453,7 @@ def makeProfilePlots2():
   #  plt.xlabel('Number of cores')
   #  plt.ylabel('Walltime (s)')
     frame2 = plt.gca()
-    frame2.get_xaxis().set_ticklabels([])  
+    frame2.get_xaxis().set_ticklabels([])
     frame2.get_yaxis().set_ticklabels([])
     plt.legend(loc='lower left', prop={'size':10})
 
@@ -1426,14 +1484,14 @@ def makeProfilePlots2():
     frame4 = plt.gca()
     frame4.get_yaxis().set_ticklabels([])
     plt.legend(loc='lower left', prop={'size':10})
-    
+
    # fig.tight_layout()
     plt.savefig('profile.png')
     return
 
 def doReorderingFigure():
     mytype, ncores, tsym, tnum = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_chol.txt", unpack=True)
-    
+
     x_PM_D = ncores[(mytype == 24)]
     x_PM_W = ncores[(mytype == 16)]
     x_PM_T = ncores[(mytype == 8)]
@@ -1452,7 +1510,7 @@ def doReorderingFigure():
     y2_PS_D = tnum[(mytype == 27)]
     y2_PS_W = tnum[(mytype == 18)]
     y2_PS_T = tnum[(mytype == 9)]
-    
+
     fig, axes = plt.subplots(nrows=2, ncols=3)
 #    axes.tick_params(axis='x',which='minor',bottom='off')
 #    axes.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
@@ -1480,8 +1538,8 @@ def doReorderingFigure():
         if i==1:    plt.ylabel('Walltime (s)')
         else:   plt.gca().get_yaxis().set_ticklabels([])
         plt.gca().get_xaxis().set_ticklabels([])
-        plt.legend(loc='upper right', prop={'size':10}) 
-        if i==3:    plt.legend(loc='lower left', prop={'size':10})     
+        plt.legend(loc='upper right', prop={'size':10})
+        if i==3:    plt.legend(loc='lower left', prop={'size':10})
 
 
     for i in range(1,4):
@@ -1503,8 +1561,8 @@ def doReorderingFigure():
         if i==2:    plt.xlabel('Number of cores')
         plt.xlim(myxlim)
         plt.ylim(myylim)
-        plt.legend(loc='upper right', prop={'size':10}) 
-        if i==3:    plt.legend(loc='lower left', prop={'size':10})     
+        plt.legend(loc='upper right', prop={'size':10})
+        if i==3:    plt.legend(loc='lower left', prop={'size':10})
     fig.tight_layout()
 
     plt.savefig('SIPs_reordering.eps')
@@ -1512,7 +1570,7 @@ def doReorderingFigure():
 
 def plotScotchvsMetis():
     mytype, ncores, tsym, tnum = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_chol.txt", unpack=True)
-    
+
     x_PM_D = ncores[(mytype == 24)]
     x_PM_W = ncores[(mytype == 16)]
     x_PM_T = ncores[(mytype == 8)]
@@ -1525,7 +1583,7 @@ def plotScotchvsMetis():
     y1_PS_D = tsym[(mytype == 27)]
     y1_PS_W = tsym[(mytype == 18)]
     y1_PS_T = tsym[(mytype == 9)]
-    
+
     fig, _ = plt.subplots(nrows=1, ncols=3, figsize=(9.5, 3.5))
 #    axes.tick_params(axis='x',which='minor',bottom='off')
 #    axes.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
@@ -1555,11 +1613,11 @@ def plotScotchvsMetis():
         if i==1:    plt.ylabel('Walltime (s)')
         else:   plt.gca().get_yaxis().set_ticklabels([])
 
-        if i==2: 
-            plt.legend(loc='upper right', prop={'size':10}) 
+        if i==2:
+            plt.legend(loc='upper right', prop={'size':10})
             plt.xlabel('Number of cores')
 
-        #if i==3:    plt.legend(loc='lower left', prop={'size':10})     
+        #if i==3:    plt.legend(loc='lower left', prop={'size':10})
     fig.tight_layout()
 
     plt.savefig('SIPs_PTScotchvsParMetis.eps')
@@ -1573,7 +1631,7 @@ def doFactorizationScalingFigure():
         'size'   : 12}
     matplotlib.rc('font', **font)
     legendsize = 12
-    ms = 5    
+    ms = 5
     fig, _ = plt.subplots(nrows=1, ncols=3, figsize=(9.5, 3.5))
 
     myxlim=[5000,1.2e6]
@@ -1589,7 +1647,7 @@ def doFactorizationScalingFigure():
         plt.plot(x, [y1[0] * x[i] / x[0] for i in range(len(x))], linestyle='-', color='red')
         plegend=plt.legend(handles=[p1,p2],loc='upper left', prop={'size':legendsize})
         plt.gca().add_artist(plegend)
-        if p<3: 
+        if p<3:
             plt.plot(x, [y2[0] * x[i] / x[0] for i in range(len(x))], linestyle='-', color='blue')
         plt.xscale('log')
         plt.yscale('log')
@@ -1599,14 +1657,14 @@ def doFactorizationScalingFigure():
             myfit = getPowerFit(x[0:3], y2[0:3])
             mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
             f1,=plt.plot(x[0:3], myfit[0], label=mylabel, linestyle='--', color='blue')
-            plt.legend(handles=[f1],loc='lower right', prop={'size':legendsize}) 
+            plt.legend(handles=[f1],loc='lower right', prop={'size':legendsize})
 
         plt.xlim(myxlim)
         plt.ylim(myylim)
-        if p>1: plt.gca().get_yaxis().set_ticklabels([]) 
+        if p>1: plt.gca().get_yaxis().set_ticklabels([])
         #myxticks=[8000,64000,512000]
         #plt.xticks(myxticks, map(lambda i : "%d" % i, myxticks))
-           
+
     fig.tight_layout()
     figureFile=sys._getframe().f_code.co_name[2:]+".eps"
     plt.savefig(figureFile)
@@ -1630,7 +1688,7 @@ def makeSparsityPlots():
         frame1 = plt.gca()
         frame1.axes.get_xaxis().set_ticks([])
         frame1.axes.get_yaxis().set_ticks([])
-    
+
     fig.tight_layout()
     plt.savefig("spartsity.png")
     return
@@ -1638,10 +1696,10 @@ def makeSparsityPlots():
 def getEigenvalues(eigenfile):
     eigs = np.loadtxt( eigenfile, unpack=True)
     print "\nAnalyzing eigenvalues in ", eigenfile
-    analyzeEigs(eigs)   
+    analyzeEigs(eigs)
     return eigs
 
-def analyzeEigs(evec):   
+def analyzeEigs(evec):
     print 'number of eigenvalues:',len(evec)
     print 'min, max, range of the spectrum:',min(evec),max(evec)
     print 'condition number (abs(max)/abs(min)):',max(abs(evec))/min(abs(evec))
@@ -1688,8 +1746,8 @@ def makeEigenvalueSpectrumFigure():
     frame1.get_xaxis().set_ticklabels(['2.0', '3.0', '4.0', '5.0'])
 
     plt.yticks([5, 10])
-    
-    plt.savefig("paper_spectra.png")                  
+
+    plt.savefig("paper_spectra.png")
     return
 
 def doEigenvalueSpectrumFigure():
@@ -1719,8 +1777,8 @@ def doEigenvalueSpectrumFigure():
         if i==1:
             plt.ylabel("Number of eigenvalues")
 
-    
-    plt.savefig("SIPs_spectra.eps")                  
+
+    plt.savefig("SIPs_spectra.eps")
     return
 
 def doEigenvalueSpectrumFigure3():
@@ -1750,8 +1808,8 @@ def doEigenvalueSpectrumFigure3():
         if i==1:
             plt.ylabel("Number of eigenvalues")
 
-    
-    plt.show()                  
+
+    plt.show()
     return
 
 def makeSpectrumClusterPlots2():
@@ -1777,7 +1835,7 @@ def makeSpectrumClusterPlots2():
         plt.ylim([0.1, 1000])
         plt.xlim([1e-8, 0.5])
 
-    plt.show()                  
+    plt.show()
     return
 
 def makeSpectrumClusterPlots3():
@@ -1800,7 +1858,7 @@ def makeSpectrumClusterPlots3():
         plt.ylim([0.1, 1000])
         plt.xlim([1e-8, 0.5])
 
-    plt.show()                  
+    plt.show()
     return
 
 def doSliceTimingFigure():
@@ -1809,7 +1867,7 @@ def doSliceTimingFigure():
     logFile1024=fileDir+'log.nanotube2-r_P2.nprocEps1024p16384.c16.n1024.24s01m06h'
     plt.figure()
     plotSliceTimings(logFile64, 1)
-    plt.savefig('nonUniformSlice2.eps') 
+    plt.savefig('nonUniformSlice2.eps')
     plotSliceTimings(logFile1024, 1)
     plt.savefig('nonUniformSlice.eps')
     return
@@ -1817,24 +1875,24 @@ def doSliceTimingFigure():
 def plotSliceTimings(logFile,embed=0):
     """
     Plot  slice Timings for a given input file
-    """    
+    """
     import parseSIPs
     logging.debug("in plotSliceTimings")
     sliceData=parseSIPs.parseSlicingTimes(logFile, "0,")
     sliceTiming=np.asarray(sliceData[2])+sliceData[0]
     nSlice=len(sliceTiming)
     setupTime=[sliceData[0]]*nSlice
-    
+
     sliceData2=parseSIPs.parseSlicingTimes(logFile, "2,")
     if len(sliceData2[2])>0:
         sliceTiming2=np.asarray(sliceData2[2])+setupTime
         nSlice2=len(sliceTiming2)
-    
-    
+
+
     print nSlice, "slices"
     print 'Iter 0', max(sliceTiming)/min(sliceTiming)
     if len(sliceData2[2])>0:print 'Iter 2', max(sliceTiming2)/min(sliceTiming2)
-  
+
     # strong scaling plots
     if not embed: plt.figure()
     font = {'weight' : 'normal',
@@ -1854,22 +1912,22 @@ def plotSliceTimings(logFile,embed=0):
     plt.xlabel('Slices')
     plt.ylabel('Time to solution (s)')
     plt.legend(loc='upper right', prop={'size':legendsize})
-    if nSlice<100: plt.savefig('nonUniformSlice1.eps') 
+    if nSlice<100: plt.savefig('nonUniformSlice1.eps')
 
 
 
     if not embed:plt.savefig(logFile+'sliceTiming.png')
-    if len(sliceData2[2])>0: 
+    if len(sliceData2[2])>0:
         if nSlice<100:
             mfc='none'
         else:
             mfc='b'
         plt.plot(x,sliceTiming2,label=str(nSlice)+' nonuniform slices',ls='none',marker='o', markersize=ms, mfc=mfc, mec='b')
-        plt.legend(loc='upper right', prop={'size':legendsize}) 
+        plt.legend(loc='upper right', prop={'size':legendsize})
 
         if not embed:plt.savefig(logFile+'sliceTiming2.png')
-    
-    if not embed: plt.show()            
+
+    if not embed: plt.show()
     return
 
 def initializeLog(debug):
@@ -1883,7 +1941,7 @@ def initializeLog(debug):
     ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(logLevel)
 
-    logging.debug("Start in debug mode:") 
+    logging.debug("Start in debug mode:")
 
 def getArgs():
     import argparse
@@ -1898,8 +1956,8 @@ def getArgs():
     parser.add_argument('-d', '--debug', action='store_true', help='Print debug information.')
     parser.add_argument('-n', '--nCoresPerSlice', type=int, default=0, nargs='?',
                         help='Speedup, efficiency and profile plots for specific number of cores per slice')
-    return parser.parse_args()  
-          
+    return parser.parse_args()
+
 def main():
     args = getArgs()
     initializeLog(args.debug)
@@ -1926,12 +1984,13 @@ def main():
       #  doReorderingFigure()
        # doFactorizationScalingFigure()
   #       doSIPsScalingFigure()
-         plotSIPsElementalScaling()
+       #  plotSIPsElementalScaling()
+         doTOCFigure()
    #      plotSIPsNNnzScalingFigure()
        # plotNonzerosFigure()
        # doReorderingFigure()
    #      doFactorizationStronScalingFigure2()
-        #   plt.show()                  
+        #   plt.show()
 
 if __name__ == "__main__":
     main()
