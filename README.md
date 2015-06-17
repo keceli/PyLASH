@@ -9,4 +9,5 @@ This repo contains Python scripts that I wrote for various purposes:
 * parseXYZ.py
 * plotSIPs.py:
 * xyz2input.py: Generates input files using given xyz files and an input template for electronic structure calculations
-* convert2mtx: Converts dat files to matrix market formatted files
+* convert2mtx.py: Converts dat files to matrix market formatted files
+* analyzeEigs.py: Analyzes files consisting of columns of numbers.

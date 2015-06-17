@@ -23,7 +23,7 @@ def analyzeEigs(evec):
 def plotEigs(evec):
     plt.figure()
     plt.hist(evec,bins=len(evec)/10)
-    plt.show()
+ #   plt.show()
     return 0
 
 def compareEigs(base,evec):
@@ -32,7 +32,7 @@ def compareEigs(base,evec):
     plt.figure()
     plt.plot(diffvec,ls='None',marker='o',mfc='k',mec='k')
     plt.ylabel('Difference')
-    plt.show()
+#    plt.show()
     return 0
 
 def initializeLog(debug=False,warning=False,silent=False):
@@ -78,7 +78,7 @@ def main():
                 base=eigs
             else:
                 compareEigs(base,eigs)
-
+        plt.show()
     else:
         logging.debug('No input arguments given')
     return 0
