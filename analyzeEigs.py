@@ -25,11 +25,25 @@ def analyzeEigs(evec):
     """
     dist = [abs(evec[j] - evec[j + 1]) for j in range(len(evec) - 1)]
     print 'min  max (delta): ', min(dist), max(dist)
+    print 'max degeneracy:', max(getMultiplicityVector(evec, 1.e-6))
     return 0
 
-def plotEigs(evec):
+def getMultiplicityVector(evec,thresh):
+    mvec=[]
+    m=1
+    for i,j in enumerate(evec):
+        if i>0 and abs(j-evec[i-1]) < thresh:
+            m=m+1
+        else:
+            mvec.append(m)
+            m=1
+    if sum(mvec) != len(evec): logging.error("multiplicity count error: {0} vs {1}".format(sum(mvec),len(evec)))
+    return mvec
+
+def plotEigs(evec,nbins):
+    if nbins==100: nbins=len(evec)/10
     plt.figure()
-    plt.hist(evec,bins=len(evec)/10)
+    plt.hist(evec,bins=nbins)
  #   plt.show()
     return 0
 
@@ -69,7 +83,8 @@ def getArgs():
     parser.add_argument('-d', '--debug', action='store_true', help='Print debug information.')
     parser.add_argument('-w', '--warning', action='store_true', help='Print warnings and errors.')
     parser.add_argument('-s', '--silent', action='store_true', help='Print only errors.')
-    parser.add_argument("-f", dest="filename", required=False, help=" input file", metavar="FILE")
+    parser.add_argument("-f", dest="filename", required=False, help="input file", metavar="FILE")
+    parser.add_argument("-b", dest="nbins", required=False, type=int, default=100, help="number of bins for the histogram")
     return parser.parse_args()
 
 def main():
@@ -81,7 +96,7 @@ def main():
             print "file: ",f
             eigs = np.loadtxt(f, unpack=True)
             analyzeEigs(eigs)
-            plotEigs(eigs)
+            plotEigs(eigs,args.nbins)
             if i==0:
                 base=eigs
             else:
