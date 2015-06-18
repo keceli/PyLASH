@@ -11,13 +11,20 @@ def getEigenvalues(eigenfile):
     return eigs
 
 def analyzeEigs(evec):
-    print 'number of eigenvalues:',len(evec)
-    print 'min, max, range of the spectrum:',min(evec),max(evec)
-    print 'condition number (abs(max)/abs(min)):',max(abs(evec))/min(abs(evec))
+    print 'n: ',len(evec)
+    print 'min max: ',min(evec),max(evec)
+    print 'condition number max(abs(eigs))/min(abs(eigs)):',max(abs(evec))/min(abs(evec))
+
+    """
+    # I don't know why below is not working, there should be no need for absolute value
+
     for i,j in enumerate(evec):
         distvec=np.zeros(len(evec)-1)
         if i>0: distvec[i-1]=j-evec[i-1]
     print 'min and max seperation',':', min(distvec), max(distvec)
+    """
+    dist = [abs(evec[j] - evec[j + 1]) for j in range(len(evec) - 1)]
+    print 'min  max (delta): ', min(dist), max(dist)
     return 0
 
 def plotEigs(evec):
@@ -71,6 +78,7 @@ def main():
     if len(args.input) > 0 :
         for i,f in enumerate(args.input):
             logging.debug('Given input argument:{0}'.format(f))
+            print "file: ",f
             eigs = np.loadtxt(f, unpack=True)
             analyzeEigs(eigs)
             plotEigs(eigs)
