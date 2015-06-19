@@ -25,15 +25,16 @@ def analyzeEigs(evec):
     """
     dist = [abs(evec[j] - evec[j + 1]) for j in range(len(evec) - 1)]
     print 'min  max (delta): ', min(dist), max(dist)
-    print 'max degeneracy:', max(getMultiplicityVector(evec, 1.e-6))
     return 0
 
-def getMultiplicityVector(evec,thresh):
+def getMultVec(evec,thresh):
     mvec=[]
     m=1
     for i,j in enumerate(evec):
         if i>0 and abs(j-evec[i-1]) < thresh:
             m=m+1
+            if i==len(evec)-1:
+                mvec.append(m)
         else:
             mvec.append(m)
             m=1
@@ -44,15 +45,29 @@ def plotEigs(evec,nbins):
     if nbins==100: nbins=len(evec)/10
     plt.figure()
     plt.hist(evec,bins=nbins)
+    plt.xlabel("Eigenvalue")
+    plt.ylabel("Number of eigenvalues")
+    plt.title("Eigenvalue histogram with {0} bins".format(nbins))
  #   plt.show()
     return 0
 
-def compareEigs(base,evec):
+def plotMult(mvec,thresh):
+    plt.figure()
+    plt.plot(mvec,ls='None',marker='o',mfc='b',mec='b')
+    plt.xlabel("")
+    plt.ylabel("Multiplicity")
+    plt.title("Multiplicity plot with a threshold {0}".format(thresh))
+ #   plt.show()
+    return 0
+
+def compareEigs(base,evec, basefile):
     diffvec=base-evec
     print 'max diff', max(diffvec)
     plt.figure()
     plt.plot(diffvec,ls='None',marker='o',mfc='k',mec='k')
+    plt.xlabel('Eigenvalue index')
     plt.ylabel('Difference')
+    plt.title('Difference based on {0}'.format(basefile))
 #    plt.show()
     return 0
 
@@ -85,6 +100,7 @@ def getArgs():
     parser.add_argument('-s', '--silent', action='store_true', help='Print only errors.')
     parser.add_argument("-f", dest="filename", required=False, help="input file", metavar="FILE")
     parser.add_argument("-b", dest="nbins", required=False, type=int, default=100, help="number of bins for the histogram")
+    parser.add_argument("-t", dest="thresh", required=False, type=float, default=1.e-6, help="threshold for multiplicity")
     return parser.parse_args()
 
 def main():
@@ -96,11 +112,14 @@ def main():
             print "file: ",f
             eigs = np.loadtxt(f, unpack=True)
             analyzeEigs(eigs)
+            mvec=getMultVec(eigs, args.thresh)
+            print 'max multiplicity:', max(mvec)
             plotEigs(eigs,args.nbins)
+            plotMult(mvec,args.thresh)
             if i==0:
                 base=eigs
             else:
-                compareEigs(base,eigs)
+                compareEigs(base,eigs,args.input[0])
         plt.show()
     else:
         logging.debug('No input arguments given')
