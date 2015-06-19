@@ -48,16 +48,17 @@ def plotEigs(evec,nbins):
     plt.xlabel("Eigenvalue")
     plt.ylabel("Number of eigenvalues")
     plt.title("Eigenvalue histogram with {0} bins".format(nbins))
- #   plt.show()
     return 0
 
 def plotMult(mvec,thresh):
+    y=np.zeros(max(mvec)-2)
+    for i in range(2,max(mvec)):
+        y[i-2]=mvec.count(i)
     plt.figure()
-    plt.plot(mvec,ls='None',marker='o',mfc='b',mec='b')
-    plt.xlabel("")
-    plt.ylabel("Multiplicity")
-    plt.title("Multiplicity plot with a threshold {0}".format(thresh))
- #   plt.show()
+    plt.plot(range(2,max(mvec)), y,ls='None',marker='o',mfc='b',mec='b')
+    plt.ylabel("Number of eigenvalues")
+    plt.xlabel("Multiplicity")
+    plt.title("Multiplicity based on a threshold {0}".format(thresh))
     return 0
 
 def compareEigs(base,evec, basefile):
@@ -112,10 +113,18 @@ def main():
             print "file: ",f
             eigs = np.loadtxt(f, unpack=True)
             analyzeEigs(eigs)
-            mvec=getMultVec(eigs, args.thresh)
-            print 'max multiplicity:', max(mvec)
             plotEigs(eigs,args.nbins)
-            plotMult(mvec,args.thresh)
+            print "multiplicity threshold:", args.thresh
+            mvec=getMultVec(eigs, args.thresh)
+            mset=list(set(mvec))
+            mset.remove(1)
+            if (max(mvec)>1):
+                for m in mset:
+                    mult=mvec.count(m)
+                    print "number of eigenvalues with multiplicity", m, ":", mult
+                print "total number of multiple eigenvalues:",len(eigs)-mvec.count(1)
+            else:
+                print "no multiplicity found"
             if i==0:
                 base=eigs
             else:
