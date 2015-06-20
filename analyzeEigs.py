@@ -10,35 +10,56 @@ def getEigenvalues(eigenfile):
     analyzeEigs(eigs)
     return eigs
 
-def analyzeEigs(evec):
+def analyzeEigs(evec,dist):
     print 'n: ',len(evec)
     print 'min max: ',min(evec),max(evec)
     print 'condition number max(abs(eigs))/min(abs(eigs)):',max(abs(evec))/min(abs(evec))
-
-    """
-    # I don't know why below is not working, there should be no need for absolute value
-
-    for i,j in enumerate(evec):
-        distvec=np.zeros(len(evec)-1)
-        if i>0: distvec[i-1]=j-evec[i-1]
-    print 'min and max seperation',':', min(distvec), max(distvec)
-    """
-    dist = [abs(evec[j] - evec[j + 1]) for j in range(len(evec) - 1)]
-    print 'min  max (delta): ', min(dist), max(dist)
+    print 'min  max separation: ', min(dist), max(dist)
     return 0
+
+def getSeparationVec(evec):
+    dist = [abs(evec[j] - evec[j + 1]) for j in range(len(evec) - 1)]
+    return dist
+
+def getSeparationVec2(evec):
+    dist=np.zeros(len(evec)-1)
+    for i,j in enumerate(evec):
+        if i>0: dist[i-1]=j-evec[i-1]
+    return dist
 
 def getMultVec(evec,thresh):
     mvec=[]
     m=1
     for i,j in enumerate(evec):
-        if i>0 and abs(j-evec[i-1]) < thresh:
+        if i < (len(evec)-1) :
+            if abs(j-evec[i+1]) < thresh:
+                m=m+1
+            else:
+                mvec.append(m)
+                m=1
+        elif i==len(evec)-1:
+                mvec.append(m)
+
+    if sum(mvec) != len(evec): logging.error("multiplicity count error: {0} vs {1}".format(sum(mvec),len(evec)))
+    return mvec
+
+def getMultVec2(dist,thresh):
+    """
+    Not right way of doing it
+    """
+    mvec=[]
+    m=1
+    for i,j in enumerate(dist):
+        if  abs(j) < thresh:
             m=m+1
-            if i==len(evec)-1:
+            if i==len(dist)-1:
                 mvec.append(m)
         else:
             mvec.append(m)
-            m=1
-    if sum(mvec) != len(evec): logging.error("multiplicity count error: {0} vs {1}".format(sum(mvec),len(evec)))
+            if m>1:
+                mvec.append(1)
+                m=1
+    if sum(mvec) != len(dist)+1: logging.error("multiplicity count error: {0} vs {1}".format(sum(mvec),len(dist)+1))
     return mvec
 
 def plotEigs(evec,nbins):
@@ -112,19 +133,18 @@ def main():
             logging.debug('Given input argument:{0}'.format(f))
             print "file: ",f
             eigs = np.loadtxt(f, unpack=True)
-            analyzeEigs(eigs)
+            dist = getSeparationVec(eigs)
+            analyzeEigs(eigs,dist)
             plotEigs(eigs,args.nbins)
             print "multiplicity threshold:", args.thresh
-            mvec=getMultVec(eigs, args.thresh)
+            mvec=getMultVec(dist, args.thresh)
             mset=list(set(mvec))
-            mset.remove(1)
-            if (max(mvec)>1):
-                for m in mset:
-                    mult=mvec.count(m)
-                    print "number of eigenvalues with multiplicity", m, ":", mult
-                print "total number of multiple eigenvalues:",len(eigs)-mvec.count(1)
-            else:
-                print "no multiplicity found"
+        #    mset.remove(1)
+            mset.sort()
+            for m in mset:
+                mult=mvec.count(m)
+                print "number of eigenvalues with multiplicity", m, ":", mult
+            print "number of eigenvalues with multiplicity > 1:",len(eigs)-mvec.count(1)
             if i==0:
                 base=eigs
             else:
