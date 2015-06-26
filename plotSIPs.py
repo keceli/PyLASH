@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import logging
@@ -14,9 +14,11 @@ import sys
 #        'size'   : 16}
 font = {'weight' : 'normal',
         'size'   : 12}
-matplotlib.rc('font', **font)
+mpl.rc('font', **font)
 legendsize = 12
 ms = 8
+legend = {'numpoints' : 1}
+mpl.rc('legend', **legend)
 # matplotlib.rc('text', usetex=True)
 #matplotlib.rcParams['mathtext.default'] = 'regular'
 
@@ -117,7 +119,7 @@ def plotSIPsNNnzScalingFigure(embed=0):
     # strong scaling plots
     font = {'weight' : 'normal',
         'size'   : 14}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     legendsize = 14
     ms = 8
     TmatrixSize, TnCores, Tratios, TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
@@ -196,13 +198,13 @@ def plotSIPsElementalScaling(embed=0):
     # strong scaling plots
     font = {'weight' : 'normal',
             'size'   : 12}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     legendsize = 11
     ms = 6
     if not embed:
         font = {'weight' : 'normal',
             'size'   : 14}
-        matplotlib.rc('font', **font)
+        mpl.rc('font', **font)
         legendsize = 14
         ms = 6
     TmatrixSize, TnCores, Tratios, TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
@@ -273,9 +275,9 @@ def plotSIPsElementalScaling(embed=0):
     p1,=plt.plot(xT2, yT, linestyle='None', label="nanotube", marker='o', markersize=ms, mfc='b', mec='b')
     p2,=plt.plot(xW2, yW, linestyle='None', label='nanowire', marker='s', markersize=ms, mfc='g', mec='g')
     p3,=plt.plot(xD2, yD, linestyle='None', label='diamond', marker='d', markersize=ms, mfc='r', mec='r')
-    p4,=plt.plot(EmatrixSize, ETtotalTime, linestyle='None', label="nanotube", marker='o', markersize=ms+2, mfc='none', mec='b')
-    p5,=plt.plot(EmatrixSize, EWtotalTime, linestyle='None', label='nanowire', marker='s', markersize=ms+2, mfc='none', mec='g')
-    p6,=plt.plot(EmatrixSize, EDtotalTime, linestyle='None', label='diamond', marker='d', markersize=ms+2, mfc='none', mec='r')
+    p4,=plt.plot(EmatrixSize, ETtotalTime, linestyle='None', label="nanotube", marker='o', markersize=ms+2, mfc='none', mec='b',mew=1)
+    p5,=plt.plot(EmatrixSize, EWtotalTime, linestyle='None', label='nanowire', marker='s', markersize=ms+2, mfc='none', mec='g',mew=1)
+    p6,=plt.plot(EmatrixSize, EDtotalTime, linestyle='None', label='diamond', marker='d', markersize=ms+2, mfc='none', mec='r',mew=1)
     #p4,=plt.plot(EmatrixSize, EtotalTime, linestyle='None', label='Elemental', marker='*', markersize=ms+2, mfc='k', mec='k')
 
 
@@ -351,7 +353,7 @@ def doScalingFigure():
     # strong and weak scaling plots
     font = {'weight' : 'normal',
         'size'   : 20}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     TmatrixSize, TnCores, Tratios, TsetupTime,TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
     WmatrixSize, WnCores, Wratios, WsetupTime,WsolveTime, WtotalTime, Wncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_W.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
     DmatrixSize, DnCores, Dratios, DsetupTime,DsolveTime, DtotalTime, Dncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_D.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
@@ -465,12 +467,14 @@ def doScalingFigure():
     # strong scaling
 #     font = {'weight' : 'normal',
 #         'size'   : 16}
-#     matplotlib.rc('font', **font)
+#     mpl.rc('font', **font)
     matlistD = [8000, 16000, 32000, 64000]
     matlistW = [8000, 32000, 128000]
     matlistT = [8000, 64000, 512000]
     xticklabel=[16,64,256, 1024,4096,16384,65536 ,266144]
     myxlim=[12,4e6]
+    myxticks=np.logspace(4,20,9,base=2)
+
     nAmdahl=3
     xlabel = "Number of cores"
     ylabel = "Time to solution (s)"
@@ -512,6 +516,7 @@ def doScalingFigure():
         plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
         plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
         plt.plot(sorted(x1), [sorted(y1, reverse=True)[0] / (sorted(x1)[i] / sorted(x1)[0]) for i in range(len(x1))], linestyle='-', color=currentcolor)
+    plt.xticks(myxticks)
 
     plt.legend(loc='upper right', prop={'size':legendsize})
    # plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
@@ -551,6 +556,7 @@ def doScalingFigure():
     plt.legend(loc='upper right', prop={'size':legendsize})
     plt.xlabel(xlabel)
    # plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+    plt.xticks(myxticks)
 
     plt.subplot(1, 3, 3)
     plt.xscale('log',basex=2)
@@ -593,6 +599,7 @@ def doScalingFigure():
     plt.gca().get_yaxis().set_ticklabels([])
     plt.legend(loc='lower left', prop={'size':legendsize})
   #  plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+    plt.xticks(myxticks)
 
     fig.tight_layout()
     plt.savefig("SIPs_strong.png")
@@ -607,7 +614,7 @@ def doTOCFigure():
     font = {'weight' : 'normal',
         'size'   : 8,
         'family' : 'sans-serif'}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     mymarker = itertools.cycle(list('o^sd*h>v<*'))
     mycolorRGB = itertools.cycle(list('rgbk'))
 
@@ -665,7 +672,7 @@ def doFactorizationStronScalingFigure():
     # strong scaling plots
     font = {'weight' : 'normal',
         'size'   : 12}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     legendsize = 8
     ms = 5
     nCores,matSize,symTime, numTime,fType = np.genfromtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/'+datafile, unpack=True,usecols=(1, 2,3,4,5))
@@ -725,7 +732,7 @@ def doFactorizationStronScalingFigure2():
     # strong scaling plots
     font = {'weight' : 'normal',
         'size'   : 12}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     legendsize = 11
     ms = 6
     nCores,matSize,symTime, numTime,fType = np.genfromtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/'+datafile, unpack=True,usecols=(1, 2,3,4,5))
@@ -809,7 +816,7 @@ def doOneSliceFigure():
     fs=14
     font = {'weight' : 'normal',
         'size'   : fs}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
 
     plt.xscale('log',basex=2)
     plt.yscale('log')
@@ -846,7 +853,7 @@ def doOneSliceProfileFigure():
  #   mydata=loadData(dataFile)
     font = {'weight' : 'normal',
         'size'   : 12}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     myxlim = [0.8, 30000]
     myylim = [0.3, 7000]
     mylegendsize = 10
@@ -939,7 +946,7 @@ def doOneSliceProfileFigure():
 def makeElementalPlots():
     font = {'weight' : 'normal',
         'size'   : 17}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     legendsize = 12
     ms = 8
     xlabel = "Number of basis functions"
@@ -968,7 +975,7 @@ def doSIPsScalingPlots():
     # strong scaling plots
     font = {'weight' : 'normal',
         'size'   : 12}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     legendsize = 10
     ms = 8
     TmatrixSize, TnCores, Tratios, TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
@@ -1132,7 +1139,7 @@ def doSIPsScalingFigure():
     # strong scaling plots
     font = {'weight' : 'normal',
         'size'   : 12}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     legendsize = 11
     ms = 6
     TmatrixSize, TnCores, Tratios, TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
@@ -1260,7 +1267,7 @@ def doNonzerosFigure():
         'size'   : 14}
     legendsize=13
 
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     x = mydata[0]
     plt.xscale('log',basex=2)
     plt.yscale('log')
@@ -1282,7 +1289,7 @@ def doNonzerosFigure():
     plt.legend(loc='upper left', prop={'size':legendsize},ncol=2)
     for n in range(6):#[5,4,3,2,1,0]:
         y=mydata[n+1]
-        plt.plot(x, y, label=mylabel[n], linestyle='None', marker=mymarker[n], markersize=8, mfc=mymfc[n],mec=mycolor[n], color=mycolor[n])
+        plt.plot(x, y, label=mylabel[n], linestyle='None', marker=mymarker[n], markersize=8, mfc=mymfc[n],mec=mycolor[n], color=mycolor[n],markeredgewidth=1)
         plt.plot(x, [y[0] * (x[i] / x[0]) for i in range(len(x))], linestyle='--', color=mycolor[n])
         if n==5:
             myfit = getPowerFit(x[:4], y[:4])
@@ -1296,7 +1303,7 @@ def doNonzerosFigure():
             figureFile=func+"1.eps"
             plt.savefig(figureFile)
 
-    #matplotlib.rc('text', usetex=True)
+    #mpl.rc('text', usetex=True)
     plt.legend(loc='upper left', prop={'size':legendsize},ncol=2)
 
     #plt.savefig("SIPs_nonzeros.png")
@@ -1327,7 +1334,7 @@ def plotNonzerosFigure():
         plt.plot(x, [y[0] * (x[i] / x[0]) for i in range(len(x))], linestyle='--', color=mycolor[n])
         if n==3:    plt.plot(x, np.multiply(x, x), marker='*', label='dense', ms=12, linestyle='-', color='black')
 
-    #matplotlib.rc('text', usetex=True)
+    #mpl.rc('text', usetex=True)
     plt.xscale('log',basex=2)
     plt.yscale('log')
 #    plt.xlabel(r"Number of basis functions ($\times$ x 1000)")
@@ -1513,11 +1520,11 @@ def doReorderingFigure():
 
     fig, axes = plt.subplots(nrows=2, ncols=3)
 #    axes.tick_params(axis='x',which='minor',bottom='off')
-#    axes.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+#    axes.get_xaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
 
     font = {'weight' : 'normal',
         'size'   : 12}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     myxticks= [1, 2, 4, 8, 16, 32, 64]
     myxlim=[0.7,80]
     myylim=[0.7,400]
@@ -1586,11 +1593,11 @@ def plotScotchvsMetis():
 
     fig, _ = plt.subplots(nrows=1, ncols=3, figsize=(9.5, 3.5))
 #    axes.tick_params(axis='x',which='minor',bottom='off')
-#    axes.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+#    axes.get_xaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
 
     font = {'weight' : 'normal',
         'size'   : 12}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     myxticks= [1, 2, 4, 8, 16, 32, 64]
     myxlim=[0.7,80]
     myylim=[0.7,400]
@@ -1629,7 +1636,7 @@ def doFactorizationScalingFigure():
     ptype, psize, tsym, tnum = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_factorization.txt", unpack=True, usecols=(1, 2, 6, 7))
     font = {'weight' : 'normal',
         'size'   : 12}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     legendsize = 12
     ms = 5
     fig, _ = plt.subplots(nrows=1, ncols=3, figsize=(9.5, 3.5))
@@ -1897,7 +1904,7 @@ def plotSliceTimings(logFile,embed=0):
     if not embed: plt.figure()
     font = {'weight' : 'normal',
         'size'   : 14}
-    matplotlib.rc('font', **font)
+    mpl.rc('font', **font)
     legendsize = 14
     ms = 6
     x=np.arange(-0.8,0.2,1./float(len(sliceTiming)))
@@ -1976,7 +1983,6 @@ def main():
          #doScalingFigure()
        #  plotScotchvsMetis()
         # doSliceTimingFigure()
-        # doNonzerosFigure()
          #makeSpectrumClusterPlots2()
          #makeSpectrumClusterPlots3()
          #doEigenvalueSpectrumFigure3()
@@ -1985,11 +1991,15 @@ def main():
        # doFactorizationScalingFigure()
   #       doSIPsScalingFigure()
        #  plotSIPsElementalScaling()
-         doTOCFigure()
+        # doTOCFigure()
    #      plotSIPsNNnzScalingFigure()
        # plotNonzerosFigure()
        # doReorderingFigure()
-   #      doFactorizationStronScalingFigure2()
+        doNonzerosFigure()
+        doFactorizationScalingFigure()
+        doScalingFigure()
+        doFactorizationStronScalingFigure2()
+        plotSIPsElementalScaling()
         #   plt.show()
 
 if __name__ == "__main__":
