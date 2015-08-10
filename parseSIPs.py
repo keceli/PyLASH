@@ -140,7 +140,7 @@ def readLogFile(logfile):
         #print logfile,values[0],list2Str(spcn),ratio,list2Str(values[1:3]),tAll,list2Str(profile_count),\
         #    list2Str(profile_time),list2Str(values[3:7]),prune(list2Str(values[7:])),\
         #    prune(list2Str(long_values)),socket.gethostname()   
-        print logfile, list2Str(spcn), list2Str(values),list2Str(profile_count),list2Str(profile_time),prune(list2Str(long_values))         
+        print logfile, values[0], list2Str(spcn), list2Str(values[1:]),list2Str(profile_count),list2Str(profile_time),prune(list2Str(long_values))         
            
     return 0     
     
@@ -180,9 +180,9 @@ def main():
     #print logfile, list2Str(spcn), list2Str(values),list2Str(profile_count),list2Str(profile_time),prune(list2Str(long_values))         
 
    # print "file s p c n",list2Str(keys),list2Str(profile_keys),list2Str(profile_keys),list2Str(long_keys)
-    print "file s p c n A SetUp Solve0 Solve1 Solve2 DMA Memory Flops/sec -mat_mumps_icntl_7 -mat_mumps_icntl_29 -mat_mumps_icntl_23 \
-    -eps_krylovschur_nev -sips_interval -eps_tol arch Total  MatMult MatSolve MatCholFctrSym MatCholFctrNum BVOrthogonalize MatMult \
-    MatSolve MatCholFctrSym MatCholFctrNum BVOrthogonalize PETScVer SLEPcVer"
+    print "file A s p c n SetUp Solve0 Solve1 Solve2 DMA Mem Flops icntl_7 icntl_29 icntl_23 \
+    nev sips_interval -eps_tol arch Total  MatMult MatSolve Sym Num Ortho MatMult \
+    Solve Sym Num Orthoe PVer SVer"
     if args.input is not None:
         logFile=args.input
         readLogFile(logFile)
