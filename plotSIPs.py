@@ -80,8 +80,8 @@ def getAmdahlLaw(t,ts,n):
     if (ts>t): logging.error('ts > t')
     s=ts/t
     p=1.0-s
-    logging.info('Serial portion:{0:.3f}'.format(s))
-    logging.info('Max speedup:{0:.2f}'.format(1.0/s))
+    logging.debug('Serial portion:{0:.3f}'.format(s))
+    logging.debug('Max speedup:{0:.2f}'.format(1.0/s))
     return t*(s+p/n.astype(float))
 
 def getPowerLaw(x,a,b):
@@ -106,12 +106,12 @@ def getPowerFit(x, y):
     index = pfinal[1]
     amp = 10.0 ** pfinal[0]
 
-    print '\n Power fit output:'
-    print 'amp:', amp, 'index', index, 'covar', covar
+    logging.debug('\n Power fit output:')
+    logging.debug('amp:', amp, 'index', index, 'covar', covar)
 
     return [amp * (x ** index), amp, index]
 
-def plotSIPsNNnzScalingFigure(embed=0):
+def plotSIPsNNnzScalingFigure(show=0):
     """
     Plot  y axis SIPs time to solution (tall)
     x axis is $ N \times N_nz $
@@ -161,7 +161,7 @@ def plotSIPsNNnzScalingFigure(embed=0):
     xTW2=np.concatenate([xT2,xW2])
     yTW=np.concatenate([yT,yW])
 
-    if not embed: plt.figure()
+    if not show: plt.figure()
 
     xlabel = r"$N \cdot N_{nz}$"
     ylabel = r"Time to solution, $t$ (s)"
@@ -190,154 +190,10 @@ def plotSIPsNNnzScalingFigure(embed=0):
 
     plt.legend(handles=[f1,f2],loc='lower right', prop={'size':legendsize})
 
-    if not embed: plt.show() #plt.savefig("SIPs_NNz_scaling.png")
+    if not show: plt.show() #plt.savefig("SIPs_NNz_scaling.png")
 
     return
 
-def plotSIPsElementalScaling(embed=0):
-    # strong scaling plots
-    font = {'weight' : 'normal',
-            'size'   : 12}
-    mpl.rc('font', **font)
-    legendsize = 11
-    ms = 6
-    if not embed:
-        font = {'weight' : 'normal',
-            'size'   : 14}
-        mpl.rc('font', **font)
-        legendsize = 14
-        ms = 6
-    TmatrixSize, TnCores, Tratios, TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
-    WmatrixSize, WnCores, Wratios, WsolveTime, WtotalTime, Wncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_W.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
-    DmatrixSize, DnCores, Dratios, DsolveTime, DtotalTime, Dncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_D.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
-    EmatrixSize, ETtotalTime,EWtotalTime,EDtotalTime= np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_El.txt', unpack=True, usecols=(0,1,2,3))
-    matrixSize,Tnnz,Wnnz,Dnnz = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_fillin.txt", unpack=True, usecols=(0,4,5,6))
-
-    matlistD = [8000, 16000, 32000, 64000]
-    matlistW = [8000, 16000, 32000, 64000, 128000]
-    matlistT = [8000, 16000, 32000,64000, 128000,256000, 512000]
-    x=np.arange(8000,5000000,1000)
-
-    xT=np.zeros(len(matlistT))
-    xT2=np.zeros(len(matlistT))
-    yT=np.zeros(len(matlistT))
-    if not embed: plt.figure()
-
-    for i in range(len(matlistT)):
-        yT[i] = min(TsolveTime[np.logical_and(TnCores == 16384,TmatrixSize == matlistT[i])])
-        xT[i] = matlistT[i]*Tnnz[matrixSize == matlistT[i]]
-        xT2[i] = matlistT[i]
-
-    xW=np.zeros(len(matlistW))
-    xW2=np.zeros(len(matlistW))
-    yW=np.zeros(len(matlistW))
-    for i in range(len(matlistW)):
-        yW[i] = min(WsolveTime[np.logical_and(WnCores == 16384,WmatrixSize == matlistW[i])])
-        xW[i] = matlistW[i]*Wnnz[matrixSize == matlistW[i]]
-        xW2[i] = matlistW[i]
-
-    xD=np.zeros(len(matlistD))
-    xD2=np.zeros(len(matlistD))
-    yD=np.zeros(len(matlistD))
-    for i in range(len(matlistD)):
-        yD[i] = min(DsolveTime[np.logical_and(DnCores == 16384,DmatrixSize == matlistD[i])])
-        xD[i] = matlistD[i]*Dnnz[matrixSize == matlistD[i]]
-        xD2[i] = matlistD[i]
-
-    xTW=np.concatenate([xT,xW])
-    xTW2=np.concatenate([xT2,xW2])
-    yTW=np.concatenate([yT,yW])
-    if embed:
-        xlabel = r"$N$"
-    else:
-        xlabel = r"Number of basis functions, $N$"
-
-    ylabel = r"Time to solution, $t$ (s)"
-
-    plt.xscale('log')
-    plt.yscale('log')
-  #  plt.grid(which='major', axis='y')
-    plt.xlabel(xlabel)
-    if not embed:
-        plt.ylabel(ylabel)
-    plt.xlim(5e3, 1.1e6)
-    plt.ylim(1, 1.1e4)
-
-#    plotNNnz=1
-#     if plotNNnz:
-#         xT2=xT
-#         xW2=xW
-#         xD2=xD
-#         xTW2=xTW
-#         EmatrixSize= [EmatrixSize[i] * (EmatrixSize[i] +1) / 2 for i in range(len(EmatrixSize))]
-#         x=np.asarray([x[i] * (x[i] +1) / 2 for i in range(len(x))])
-
-    p1,=plt.plot(xT2, yT, linestyle='None', label="nanotube", marker='o', markersize=ms, mfc='b', mec='b')
-    p2,=plt.plot(xW2, yW, linestyle='None', label='nanowire', marker='s', markersize=ms, mfc='g', mec='g')
-    p3,=plt.plot(xD2, yD, linestyle='None', label='diamond', marker='d', markersize=ms, mfc='r', mec='r')
-    p4,=plt.plot(EmatrixSize, ETtotalTime, linestyle='None', label="nanotube", marker='o', markersize=ms+2, mfc='none', mec='b',mew=1)
-    p5,=plt.plot(EmatrixSize, EWtotalTime, linestyle='None', label='nanowire', marker='s', markersize=ms+2, mfc='none', mec='g',mew=1)
-    p6,=plt.plot(EmatrixSize, EDtotalTime, linestyle='None', label='diamond', marker='d', markersize=ms+2, mfc='none', mec='r',mew=1)
-    #p4,=plt.plot(EmatrixSize, EtotalTime, linestyle='None', label='Elemental', marker='*', markersize=ms+2, mfc='k', mec='k')
-
-
-
-
-
-#     myfit = getPowerFit(EmatrixSize, EtotalTime)
-#     mylabel=r'$t_{El}=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
-#     f2,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='black')
-
-#     myfit = getPowerFit(xW2, yW)
-#     mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
-#     f2,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='green')
-#
-#     myfit = getPowerFit(xT2, yT)
-#     mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
-#     f3,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='blue')
-
-
-
-#    z = np.polyfit(EmatrixSize, EtotalTime, 3)
-#    myfit = np.poly1d(z)
-
-#     z = getCubicFit(xT2, yT)
-#     mylabel=r'$t_{El}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
-#     f6,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='blue')
-#
-#     z = getCubicFit(xW2, yW)
-#     mylabel=r'$t_{El}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
-#     f7,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='green')
-
-#     z = getCubicFit(xD2, yD)
-#     mylabel=r'$t_{SIPs}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
-#     f8,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='red')
-    if embed:
-       # plegend = plt.legend(handles=[f4,f1], loc='lower right',prop={'size':legendsize})
-        #plt.gca().add_artist(plegend)
-        plt.legend(handles=[f1,f4,p4],loc='upper left', prop={'size':legendsize},frameon=False)
-    else:
-        plegend = plt.legend(handles=[p1,p2,p3,p4,p5,p6], loc='lower right',prop={'size':legendsize},ncol=2, title="SIPs                 Elemental")
-        plt.gca().add_artist(plegend)
-        plt.savefig("SIPs_El_scaling1.png")
-        myfit = getPowerFit(xD2, yD)
-        mylabel=r'$t_{SIPs}=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
-        f1,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='red')
-        myfit = getPowerFit(xTW2, yTW)
-        mylabel=r'$t_{SIPs}=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
-        f4,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='blue')
-      #  z = getCubicFit(EmatrixSize, EtotalTime)
-       # mylabel=r'$t_{El}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
-
-      #  f5,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='black')
-        plt.legend(handles=[f1,f4],loc='upper left', prop={'size':legendsize},frameon=False)
- #   plt.gca().get_yaxis().set_ticklabels([])
- #   fig.tight_layout()
-    if not embed : plt.savefig("SIPs_El_scaling2.png")
-
-
-    # plt.show()
-    return
 
 def binning(M, blockSize):
     size = M.shape[0]
@@ -349,263 +205,6 @@ def binning(M, blockSize):
         bins[(i // blockSize, j // blockSize)] += 1
     return bins
 
-def doScalingFigure():
-    # strong and weak scaling plots
-    font = {'weight' : 'normal',
-        'size'   : 20}
-    mpl.rc('font', **font)
-    TmatrixSize, TnCores, Tratios, TsetupTime,TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
-    WmatrixSize, WnCores, Wratios, WsetupTime,WsolveTime, WtotalTime, Wncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_W.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
-    DmatrixSize, DnCores, Dratios, DsetupTime,DsolveTime, DtotalTime, Dncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_D.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
-
-    ratiosT = [2000, 1000, 500, 250, 125, 62.5]  # ,192]
-    ratiosW = [2000, 1000, 500, 250, 125, 62.5]  # ,192]
-    ratiosD = [2000, 1000, 500, 250, 125, 62.5]  # ,192]
-    ratiosT = [2000, 1000, 500, 250]  # ,192]
-    ratiosW = [2000, 1000, 500, 250]  # ,192]
-    ratiosD = [2000, 1000, 500, 250]  # ,192]
-    xticklabel = [ 8000,32000, 128000,512000]
-
-    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 6.5))
-    plt.subplot(1, 3, 1)
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.xlim(5000, 1e6)
-    plt.ylim(10, 1e4)
-    plt.grid(which='major', axis='y')
-    ylabel = "Time to solution (s)"
-    plt.ylabel(ylabel)
-    mymarker = itertools.cycle(list('o^sd*h>v<*'))
-    mycolorRGB = itertools.cycle(list('rgbk'))
-
-    legendsize = 15
-    ms = 8
-    for i in range(len(ratiosT)):
-        x = TmatrixSize[np.logical_and(Tratios == ratiosT[i], Tncoresperslice == 16)]
-        y = TtotalTime[np.logical_and(Tratios == ratiosT[i], Tncoresperslice == 16)]
-        x2 = TmatrixSize[np.logical_and(Tratios == ratiosT[i], Tncoresperslice == 32)]
-        y2 = TtotalTime[np.logical_and(Tratios == ratiosT[i], Tncoresperslice == 32)]
-        myLabel = "ratio = " + str(ratiosT[i])
-        currentmarker = next(mymarker)
-        currentcolor = next(mycolorRGB)
-        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
-    plt.legend(loc='upper right', prop={'size':legendsize})
-    plt.tick_params(\
-    axis='x',          # changes apply to the x-axis
-    which='minor',      # both major and minor ticks are affected
-    bottom='off',      # ticks along the bottom edge are off
-    top='off',         # ticks along the top edge are off
-    labelbottom='on') # labels along the bottom edge are off
-    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-
-
-    plt.subplot(1, 3, 2)
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.xlim(5000, 1e6)
-    plt.ylim(10, 1e4)
-    plt.grid(which='major', axis='y')
-    xlabel = "Number of basis functions"
-    plt.xlabel(xlabel)
-    mymarker = itertools.cycle(list('o^sd*h>v<*'))
-    for i in range(len(ratiosW)):
-        x = WmatrixSize[np.logical_and(Wratios == ratiosW[i], Wncoresperslice == 16)]
-        y = WtotalTime[np.logical_and(Wratios == ratiosW[i], Wncoresperslice == 16)]
-        x2 = WmatrixSize[np.logical_and(Wratios == ratiosW[i], Wncoresperslice == 32)]
-        y2 = WtotalTime[np.logical_and(Wratios == ratiosW[i], Wncoresperslice == 32)]
-        myLabel = "ratio = " + str(ratiosW[i])
-        currentmarker = next(mymarker)
-        currentcolor = next(mycolorRGB)
-        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
-    plt.legend(loc='upper right', prop={'size':legendsize})
-    plt.xlim(5000, 1e6)
-    plt.ylim(10, 1e4)
-    plt.gca().get_yaxis().set_ticklabels([])
-    plt.tick_params(\
-    axis='x',          # changes apply to the x-axis
-    which='minor',      # both major and minor ticks are affected
-    bottom='off',      # ticks along the bottom edge are off
-    top='off',         # ticks along the top edge are off
-    labelbottom='on') # labels along the bottom edge are off
-    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-
-    plt.subplot(1, 3, 3)
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.grid(which='major', axis='y')
-    mymarker = itertools.cycle(list('o^sd*h>v<*'))
-    for i in range(len(ratiosD)):
-        x = DmatrixSize[np.logical_and(Dratios == ratiosD[i], Dncoresperslice == 16)]
-        y = DtotalTime[np.logical_and(Dratios == ratiosD[i], Dncoresperslice == 16)]
-        x2 = DmatrixSize[np.logical_and(Dratios == ratiosD[i], Dncoresperslice > 16)]
-        y2 = DtotalTime[np.logical_and(Dratios == ratiosD[i], Dncoresperslice > 16)]
-        myLabel = "ratio = " + str(ratiosD[i])
-        currentmarker = next(mymarker)
-        currentcolor = next(mycolorRGB)
-        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
-
-    plt.legend(loc='upper right', prop={'size':legendsize})
-    plt.xlim(5000, 1e6)
-    plt.ylim(10, 1e4)
-    plt.gca().get_yaxis().set_ticklabels([])
-    plt.tick_params(\
-    axis='x',          # changes apply to the x-axis
-    which='minor',      # both major and minor ticks are affected
-    bottom='off',      # ticks along the bottom edge are off
-    top='off',         # ticks along the top edge are off
-    labelbottom='on') # labels along the bottom edge are off
-    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-
-    fig.tight_layout()
-    plt.savefig("SIPs_weak.png")
-
-    # strong scaling
-    # strong scaling
-    # strong scaling
-#     font = {'weight' : 'normal',
-#         'size'   : 16}
-#     mpl.rc('font', **font)
-    matlistD = [8000, 16000, 32000, 64000]
-    matlistW = [8000, 32000, 128000]
-    matlistT = [8000, 64000, 512000]
-    xticklabel=[16,64,256, 1024,4096,16384,65536 ,266144]
-    myxlim=[12,4e6]
-    myxticks=np.logspace(4,20,9,base=2)
-
-    nAmdahl=3
-    xlabel = "Number of cores"
-    ylabel = "Time to solution (s)"
-
-    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 6.5))
-  #  fig, axes = plt.subplots(nrows=1, ncols=3,figsize=(9.5,3.5))
-
-    plt.subplot(1, 3, 1)
-    plt.xscale('log',basex=2)
-    plt.yscale('log')
-    plt.grid(which='major', axis='y')
-    plt.ylabel(ylabel)
-    plt.xlim(myxlim)
-    plt.ylim(1, 1e4)
-    mymarker = itertools.cycle(list('o^sd*h>v<*'))
-    mycolorRGB = itertools.cycle(list('rgbk'))
-    for i in range(len(matlistT)):
-        myLabel = r'$N=$' + str(matlistT[i])
-        currentmarker = next(mymarker)
-        currentcolor = next(mycolorRGB)
-        x = TnCores[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 16)]
-        y = TtotalTime[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 16)]
-        if (i<nAmdahl):
-            tsVec=TsetupTime[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 16)]
-            ts=sum(tsVec)/len(tsVec)
-            xAmdahl=getExtendedArray(x, 1e7)
-            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0]))
-            if (nAmdahl==1):
-                plt.plot(xAmdahl, yAmdahl, linestyle='--', label="Amdahl's law", marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-            else:
-                plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-
-        x1 = TnCores[(TmatrixSize == matlistT[i])]
-        y1 = TtotalTime[(TmatrixSize == matlistT[i])]
-        x2 = TnCores[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 32)]
-        y2 = TtotalTime[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 32)]
-
-
-        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
-        plt.plot(sorted(x1), [sorted(y1, reverse=True)[0] / (sorted(x1)[i] / sorted(x1)[0]) for i in range(len(x1))], linestyle='-', color=currentcolor)
-    plt.xticks(myxticks)
-
-    plt.legend(loc='upper right', prop={'size':legendsize})
-   # plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-
-    plt.subplot(1, 3, 2)
-    plt.xscale('log',basex=2)
-    plt.yscale('log')
-    plt.xlim(myxlim)
-    plt.ylim(1, 1e4)
-    plt.grid(which='major', axis='y')
-    mymarker = itertools.cycle(list('o^sd*h>v<*'))
-    mycolorRGB = itertools.cycle(list('rgbk'))
-    for i in range(len(matlistW)):
-        x = WnCores[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 16)]
-        y = WtotalTime[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 16)]
-        x1 = WnCores[(WmatrixSize == matlistW[i])]
-        y1 = WtotalTime[(WmatrixSize == matlistW[i])]
-        x2 = WnCores[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 32)]
-        y2 = WtotalTime[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 32)]
-        myLabel = r'$N=$' + str(matlistW[i])
-        currentmarker = next(mymarker)
-        currentcolor = next(mycolorRGB)
-        if (i<nAmdahl):
-            tsVec=WsetupTime[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 16)]
-            ts=sum(tsVec)/len(tsVec)
-            xAmdahl=getExtendedArray(x, 1e7)
-            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0]))
-            if (nAmdahl==1):
-                plt.plot(xAmdahl, yAmdahl, linestyle='--', label="Amdahl's law", marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-            else:
-                plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-
-        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
-        plt.plot(sorted(x1), [sorted(y1, reverse=True)[0] / (sorted(x1)[i] / sorted(x1)[0]) for i in range(len(x1))], linestyle='-', color=currentcolor)
-    plt.gca().get_yaxis().set_ticklabels([])
-    plt.legend(loc='upper right', prop={'size':legendsize})
-    plt.xlabel(xlabel)
-   # plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-    plt.xticks(myxticks)
-
-    plt.subplot(1, 3, 3)
-    plt.xscale('log',basex=2)
-    plt.yscale('log')
-    plt.xlim(myxlim)
-    plt.ylim(1, 1e4)
-    plt.grid(which='major', axis='y')
-    mymarker = itertools.cycle(list('o^sd*h>v<*'))
-    mycolorRGB = itertools.cycle(list('rgbk'))
-    for i in range(len(matlistD)):
-        x = DnCores[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 16)]
-        y = DtotalTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 16)]
-        x1 = DnCores[(DmatrixSize == matlistD[i])]
-        y1 = DtotalTime[(DmatrixSize == matlistD[i])]
-        x2 = DnCores[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice > 16)]
-        y2 = DtotalTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice > 16)]
-        myLabel = r'$N=$' + str(matlistD[i])
-        currentmarker = next(mymarker)
-        currentcolor = next(mycolorRGB)
-        if (i<nAmdahl):
-            tsVec=DsetupTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 16)]
-            ts=sum(tsVec)/len(tsVec)
-            xAmdahl=getExtendedArray(x, 1e7)
-            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0]))
-            if (nAmdahl==1):
-                plt.plot(xAmdahl, yAmdahl, linestyle='--', label="Amdahl's law", marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-            else:
-                plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-        if i==3:
-            print matlistD[i]
-            tsVec=DsetupTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 64)]
-            ts=sum(tsVec)/len(tsVec)
-            xAmdahl=getExtendedArray(x2, 1e7)
-            yAmdahl=getAmdahlLaw(y2[0], ts, xAmdahl/float(x2[0]))
-            plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
-
-        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
-        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
-        plt.plot(sorted(x1), [sorted(y1, reverse=True)[0] / (sorted(x1)[i] / sorted(x1)[0]) for i in range(len(x1))], linestyle='-', color=currentcolor)
-    plt.gca().get_yaxis().set_ticklabels([])
-    plt.legend(loc='lower left', prop={'size':legendsize})
-  #  plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-    plt.xticks(myxticks)
-
-    fig.tight_layout()
-    plt.savefig("SIPs_strong.png")
-
-    # plt.show()
-    return
 
 def doTOCFigure():
     """
@@ -667,7 +266,7 @@ def doTOCFigure():
 
 def doFactorizationStronScalingFigure():
     datafile='data_max_factorization.txt'
-    print '\n\n Generating factorization scaling figure using data file:',datafile
+    logging.debug('\n\n Generating factorization scaling figure using data file:',datafile)
 
     # strong scaling plots
     font = {'weight' : 'normal',
@@ -725,223 +324,8 @@ def doFactorizationStronScalingFigure():
     # plt.show()
     return
 
-def doFactorizationStronScalingFigure2():
-    datafile='data_max_factorization.txt'
-    print '\n\n Generating factorization scaling figure using data file:',datafile
-
-    # strong scaling plots
-    font = {'weight' : 'normal',
-        'size'   : 12}
-    mpl.rc('font', **font)
-    legendsize = 11
-    ms = 6
-    nCores,matSize,symTime, numTime,fType = np.genfromtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/'+datafile, unpack=True,usecols=(1, 2,3,4,5))
-   #  fName = np.genfromtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_max_factorization.txt', unpack=True, usecols=(0),dtype=None)
 
 
-    xlabel = "Number of cores"
-    ylabel = "Walltime (s)"
-
-
-    fig, _ = plt.subplots(nrows=1, ncols=3, figsize=(9.5, 3.5))
-
-    mymarker = itertools.cycle(list('osd*h>v<*'))
-    mycolor = itertools.cycle(list('bgrgbk'))
-  #  fList=['tube', 'wire', 'diamond']
-    mList=[512000,128000,64000]
-    for i in range(3):
-        plt.subplot(1, 3, i+1)
-    #    xMin = nCores[np.logical_and(matSize==8000,fList[i] in fName)] # gave false for fList in condition
-        xMin = nCores[np.logical_and(matSize==8000,fType==i)]
-        yMinSym = symTime[np.logical_and(matSize==8000,fType==i)]
-        yMinNum = numTime[np.logical_and(matSize==8000,fType==i)]
-        yMinTot = yMinSym + 2.0 * yMinNum
-        xMax=nCores[np.logical_and(matSize==mList[i],fType==i)]
-        yMaxSym = symTime[np.logical_and(matSize==mList[i],fType==i)]
-        yMaxNum = numTime[np.logical_and(matSize==mList[i],fType==i)]
-        yMaxTot = yMaxSym + 2.0 * yMaxNum
-      #  currentmarker = mymarker.next()
-        plt.xscale('log',basex=2)
-        plt.yscale('log')
-        plt.grid(which='major', axis='y')
-        if (i==1): plt.xlabel(xlabel)
-        if (i==0): plt.ylabel(ylabel)
-        plt.xlim(10, 700)
-#         plt.ylim(0.5, 1500)
-        plt.ylim(1, 500)
-#         plt.plot(xMin, yMinSym, linestyle='None', label='sym. 8000', marker='o', markersize=ms, mfc='blue', mec='blue')
-#         plt.plot(xMin, yMinNum, linestyle='None', label='num. 8000', marker='s', markersize=ms, mfc='blue', mec='blue')
-#         plt.plot(xMin, yMinTot, linestyle='None', label='tot. 8000', marker='d', markersize=ms, mfc='blue', mec='blue')
-        plt.plot(xMax, yMaxSym, linestyle='None', label='sym. ', marker='o', markersize=ms, mfc='blue', mec='blue')
-        plt.plot(xMax, yMaxNum, linestyle='None', label='num. ', marker='s', markersize=ms, mfc='green', mec='green')
-        plt.plot(xMax, yMaxTot, linestyle='None', label='tot. ', marker='d', markersize=ms, mfc='red', mec='red')
-        if i<2:
-            plt.legend(loc='upper left', prop={'size':legendsize},ncol=1)
-        else:
-            plt.legend(loc='lower left', prop={'size':legendsize},ncol=1)
-        xticklabel = [ 16,32, 64,128, 256, 512]
-        plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-        if i>0: plt.gca().get_yaxis().set_ticklabels([])
-
-
-
-    fig.tight_layout()
-    figureFile=sys._getframe().f_code.co_name[2:]+".eps"
-    plt.savefig(figureFile)
-    return
-
-def doOneSliceFigure():
-    nSlices, nCores,setupTime,solveTime, totalTime = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_1slice.txt", unpack=True, usecols=(1, 2,6,7, 8))
-    T_size, T_nSlices, T_nCores,T_setupTime,T_solveTime, T_totalTime = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt", unpack=True, usecols=(1, 2, 3,7,8, 9))
-    x = nCores[(nSlices == 1)]
-    y = totalTime[(nSlices == 1)]
-    x2 = nCores[(nSlices > 1)]
-    y2 = totalTime[(nSlices > 1)]
-    x3 = T_nCores[(T_size == 8000)]
-    y3 = T_totalTime[(T_size == 8000)]
-    x4 = [1, 2, 4, 8, 16, 64, 256, 1024, 4096, 16384]
-
-    tSetupVec=setupTime[(nSlices > 1)]
-    tSetup=sum(tSetupVec)/len(tSetupVec)
-    xAmdahl=getExtendedArray(x2, 40000)
-    yAmdahl=getAmdahlLaw(y[0], tSetup, xAmdahl)
-
-    tSetupVec2=T_setupTime[(T_size == 8000)]
-    tSetup2=sum(tSetupVec2)/len(tSetupVec2)
-    xAmdahl2=getExtendedArray(x3, 40000)
-    yAmdahl2=getAmdahlLaw(y3[0], tSetup2, xAmdahl2/16.0)
-
-    plt.figure()
-    ls=14
-    fs=14
-    font = {'weight' : 'normal',
-        'size'   : fs}
-    mpl.rc('font', **font)
-
-    plt.xscale('log',basex=2)
-    plt.yscale('log')
-    plt.xlabel('Number of cores')
-    plt.ylabel('Time to solution (s)')
-    plt.xticks(x4, map(lambda i : "%d" % i, x4))
-    plt.xlim([0.5, 35000])
-    plt.ylim([0.1, 5000])
-
-    plt.plot(x, y, label='single slice', linestyle='None', marker='o', markersize=8, color='black')
-    plt.plot(x4, [y[0] / (x4[i] / x4[0]) for i in range(len(x4))], linestyle='-', color='black')
-    plt.plot(x2, y2, label='one core per slice', linestyle='None', marker='s', markersize=8, color='red')
-    plt.legend(loc='lower left', prop={'size':ls})
-
-    plt.savefig('SIPs_single_slice1.eps')
-#    plt.plot(x2,tAmdahl , label="Amdahl's law", linestyle='--', marker='.', color='green')
-    plt.plot(xAmdahl,yAmdahl , linestyle='--', marker='.', color='red')
-    plt.legend(loc='lower left', prop={'size':ls})
-    plt.savefig('SIPs_single_slice2.eps')
-
-    plt.plot(x3, y3, label='16 cores per slice', linestyle='None', marker='d', markersize=8, color='blue')
-    plt.plot(x3, [y3[0] / (x3[i] / x3[0]) for i in range(len(x3))], linestyle='-', color='blue')
-    plt.plot(xAmdahl2,yAmdahl2 , linestyle='--', marker='.', color='blue')
-    plt.legend(loc='lower left', prop={'size':ls})
-    plt.savefig('SIPs_single_slice3.eps')
-
- #   plt.plot(x3,tAmdahl , label="Amdahl's law", linestyle='--', marker='.', color='red')
-
-
-    return
-
-def doOneSliceProfileFigure():
-    nSlices, nCores, totalTime, solTime, symTime, numTime, ortTime = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_1slice.txt", unpack=True, usecols=(1, 2, 8, 15, 16, 17, 18))
- #   mydata=loadData(dataFile)
-    font = {'weight' : 'normal',
-        'size'   : 12}
-    mpl.rc('font', **font)
-    myxlim = [0.8, 30000]
-    myylim = [0.3, 7000]
-    mylegendsize = 10
-    myx = [1, 4, 16, 64, 256, 1024, 4096, 16394]
-    xticklabel = [ 1, 4, 16, 64, 1024,16384]
-
-
-    plt.figure()
-    fig, ax = plt.subplots(nrows=2, ncols=2)  # ,figsize=(8,6))
-    plt.setp(ax, xlim=myxlim, ylim=myylim, xscale='log', yscale='log')
-    x = nCores[(nSlices == 1)]
-    mymarker5 = itertools.cycle(list('osd^*>v<*'))
-    mymarker6 = itertools.cycle(list('osd^*>v<*'))
-    mycolor5 = itertools.cycle(list('rgbkcmyk'))
-    mycolor6 = itertools.cycle(list('rgbkcmyk'))
-
-    plt.subplot(2, 2, 1)
-    y = symTime[(nSlices == 1)]
-    plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
-    plt.plot(x, y, label='sym. (single slice)', linestyle='None', marker=next(mymarker5), markersize=5, mfc='black', mec='black')
-    x2 = nCores[(nSlices > 1)]
-    y2 = symTime[(nSlices > 1)]
-    plt.plot(x2, y2, label='sym. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='red', mec='red')
-
-    plt.ylabel('Walltime (s)')
-    plt.legend(loc='upper right', prop={'size':mylegendsize})
-    plt.xscale('log',basex=2)
-    plt.yscale('log')
-    plt.xlim(myxlim)
-    plt.ylim(myylim)
-    plt.gca().get_xaxis().set_ticklabels([])
-
-    plt.subplot(2, 2, 2)
-    y = numTime[(nSlices == 1)]
-    plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
-    plt.plot(x, y, label='num. (single slice)', linestyle='None', marker=next(mymarker5), markersize=5, mfc='black', mec='black')
-    x2 = nCores[(nSlices > 1)]
-    y2 = numTime[(nSlices > 1)]
-    plt.plot(x2, y2, label='num. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='red', mec='red')
-
-    xAmdahl=getExtendedArray(x, 2e5)
-    tAmdahl=getAmdahlLaw(y[0], y[0]/64.0, xAmdahl)
-    plt.plot(xAmdahl,tAmdahl , linestyle='--', marker='.', color='red')
-
-    plt.legend(loc='upper right', prop={'size':mylegendsize})
-    plt.xscale('log',basex=2)
-    plt.yscale('log')
-    plt.xlim(myxlim)
-    plt.ylim(myylim)
-    plt.gca().get_xaxis().set_ticklabels([])
-    plt.gca().get_yaxis().set_ticklabels([])
-
-
-    plt.subplot(2, 2, 3)
-    y = solTime[(nSlices == 1)]
-    plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
-    plt.plot(x, y, label='sol. (single slice)', linestyle='None', marker=next(mymarker5), markersize=5, mfc='black', mec='black')
-    x2 = nCores[(nSlices > 1)]
-    y2 = solTime[(nSlices > 1)]
-    plt.plot(x2, y2, label='sol. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='red', mec='red')
-    plt.xlabel('Number of cores')
-    plt.ylabel('Walltime (s)')
-    plt.legend(loc='upper right', prop={'size':mylegendsize})
-    plt.xscale('log',basex=2)
-    plt.yscale('log')
-    plt.xlim(myxlim)
-    plt.ylim(myylim)
-    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-
-    plt.subplot(2, 2, 4)
-    y = ortTime[(nSlices == 1)]
-    plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
-    plt.plot(x, y, label='ort. (single slice)', linestyle='None', marker=next(mymarker5), markersize=5, mfc='black', mec='black')
-    x2 = nCores[(nSlices > 1)]
-    y2 = ortTime[(nSlices > 1)]
-    plt.plot(x2, y2, label='ort. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='red', mec='red')
-    plt.xscale('log',basex=2)
-    plt.yscale('log')
-    plt.xlim(myxlim)
-    plt.ylim(myylim)
-    plt.xlabel('Number of cores')
-    plt.gca().get_yaxis().set_ticklabels([])
-    plt.legend(loc='upper right', prop={'size':mylegendsize})
-    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-    fig.tight_layout()
-
-    plt.savefig('SIPs_single_slice_profile.eps')
-    return
 
 def makeElementalPlots():
     font = {'weight' : 'normal',
@@ -1239,7 +623,7 @@ def doSIPsScalingFigure():
 #
 #     plt.legend(handles=[f1,f2],loc='lower right', prop={'size':legendsize})
 #     plt.gca().get_yaxis().set_ticklabels([])
-    plotSIPsElementalScaling(1)
+    plotSIPsElScaling(1)
     plt.gca().get_yaxis().set_ticklabels([])
 
 
@@ -1252,64 +636,6 @@ def doSIPsScalingFigure():
 
 
 
-def doNonzerosFigure():
-    func=sys._getframe().f_code.co_name[2:]
-    datafile="/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_fillin.txt"
-    print '\n\n Generating nonzeros figure using data file:',datafile
-    mydata = np.loadtxt(datafile, unpack=True)
-    mylabel =['nanotube','nanowire','diamond','nanotube','nanowire','diamond']
-    mycolor=['blue','green','red','blue','green','red']
-    mymarker=['o','s','d','o','s','d']
-    mymfc=['none','none','none','blue','green','red']
-
-    plt.figure()
-    font = {'weight' : 'normal',
-        'size'   : 14}
-    legendsize=13
-
-    mpl.rc('font', **font)
-    x = mydata[0]
-    plt.xscale('log',basex=2)
-    plt.yscale('log')
-#    plt.xlabel(r"Number of basis functions ($\times$ x 1000)")
-    plt.xlabel(r"Number of basis functions")
-    plt.ylabel("Number of nonzeros")
-    plt.xlim([5E3, 1E6])
-    plt.ylim([1E5, 1E12])
-    plt.grid(which='major', axis='y')
-    xticklabel = [ 8000,32000,128000, 512000]
-   # xticklabel2 = [ 8,32,128, 512]
-    plt.tick_params(\
-    axis='x',          # changes apply to the x-axis
-    which='minor',      # both major and minor ticks are affected
-    bottom='off',      # ticks along the bottom edge are off
-    top='off',         # ticks along the top edge are off
-    labelbottom='on') # labels along the bottom edge are off
-    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
-    plt.legend(loc='upper left', prop={'size':legendsize},ncol=2)
-    for n in range(6):#[5,4,3,2,1,0]:
-        y=mydata[n+1]
-        plt.plot(x, y, label=mylabel[n], linestyle='None', marker=mymarker[n], markersize=8, mfc=mymfc[n],mec=mycolor[n], color=mycolor[n],markeredgewidth=1)
-        plt.plot(x, [y[0] * (x[i] / x[0]) for i in range(len(x))], linestyle='--', color=mycolor[n])
-        if n==5:
-            myfit = getPowerFit(x[:4], y[:4])
-            amp=myfit[1]
-            index=myfit[2]
-            fitlabel=r'$N_{nz}=$'+r'${0:.2f}N^{{{1:.2f}}}$'.format(myfit[1], myfit[2])
-            plt.plot(x, amp * (x ** index), label=fitlabel, linestyle=':', color='red')
-        if n==2:
-            plt.plot(x, [x[i] * (x[i]+1) / 2 for i in range(len(x))], marker='*', label='dense', ms=12, linestyle='-', color='black')
-            plt.legend(loc='upper left', prop={'size':legendsize},ncol=1)
-            figureFile=func+"1.eps"
-            plt.savefig(figureFile)
-
-    #mpl.rc('text', usetex=True)
-    plt.legend(loc='upper left', prop={'size':legendsize},ncol=2)
-
-    #plt.savefig("SIPs_nonzeros.png")
-    figureFile=func+".eps"
-    plt.savefig(figureFile)
-    return
 
 def plotNonzerosFigure():
     datafile="/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_fillin.txt"
@@ -1631,51 +957,6 @@ def plotScotchvsMetis():
     return
 
 
-def doFactorizationScalingFigure():
-    # symbolic and numeric factorization
-    ptype, psize, tsym, tnum = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_factorization.txt", unpack=True, usecols=(1, 2, 6, 7))
-    font = {'weight' : 'normal',
-        'size'   : 12}
-    mpl.rc('font', **font)
-    legendsize = 12
-    ms = 5
-    fig, _ = plt.subplots(nrows=1, ncols=3, figsize=(9.5, 3.5))
-
-    myxlim=[5000,1.2e6]
-    myylim=[1,8e3]
-    for p in range(1,4):
-        plt.subplot(1, 3, p)
-        x = psize[ptype == p]
-        y1 = tsym[ptype == p]
-        y2 = tnum[ptype == p]
-
-        p1,=plt.plot(x, y1, label='sym.', linestyle='None', marker='o', markersize=ms, mfc='none', mec='red')
-        p2,=plt.plot(x, y2, label='num. ', linestyle='None', marker='o', markersize=ms, mfc='blue', mec='blue')
-        plt.plot(x, [y1[0] * x[i] / x[0] for i in range(len(x))], linestyle='-', color='red')
-        plegend=plt.legend(handles=[p1,p2],loc='upper left', prop={'size':legendsize})
-        plt.gca().add_artist(plegend)
-        if p<3:
-            plt.plot(x, [y2[0] * x[i] / x[0] for i in range(len(x))], linestyle='-', color='blue')
-        plt.xscale('log')
-        plt.yscale('log')
-        if p==1: plt.ylabel(r'Walltime, $t$ (s)')
-        if p==2: plt.xlabel(r'Number of basis functions, $N$')
-        if p==3:
-            myfit = getPowerFit(x[0:3], y2[0:3])
-            mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
-            f1,=plt.plot(x[0:3], myfit[0], label=mylabel, linestyle='--', color='blue')
-            plt.legend(handles=[f1],loc='lower right', prop={'size':legendsize})
-
-        plt.xlim(myxlim)
-        plt.ylim(myylim)
-        if p>1: plt.gca().get_yaxis().set_ticklabels([])
-        #myxticks=[8000,64000,512000]
-        #plt.xticks(myxticks, map(lambda i : "%d" % i, myxticks))
-
-    fig.tight_layout()
-    figureFile=sys._getframe().f_code.co_name[2:]+".eps"
-    plt.savefig(figureFile)
-    return
 
 
 def makeSparsityPlots():
@@ -1879,7 +1160,803 @@ def doSliceTimingFigure():
     plt.savefig('nonUniformSlice.eps')
     return
 
-def plotSliceTimings(logFile,embed=0):
+def plotNnzScaling(filename='',show=False):
+    datafile="/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_fillin.txt"
+    logging.debug( '\n\n Generating nonzeros figure using data file:',datafile)
+    mydata = np.loadtxt(datafile, unpack=True)
+    mylabel =['nanotube','nanowire','diamond','nanotube','nanowire','diamond']
+    mycolor=['blue','green','red','blue','green','red']
+    mymarker=['o','s','d','o','s','d']
+    mymfc=['none','none','none','blue','green','red']
+
+    plt.figure()
+    font = {'weight' : 'normal',
+        'size'   : 14}
+    legendsize=13
+
+    mpl.rc('font', **font)
+    x = mydata[0]
+    plt.xscale('log',basex=2)
+    plt.yscale('log')
+#    plt.xlabel(r"Number of basis functions ($\times$ x 1000)")
+    plt.xlabel(r"Number of basis functions")
+    plt.ylabel("Number of nonzeros")
+    plt.xlim([5E3, 1E6])
+    plt.ylim([1E5, 1E12])
+    plt.grid(which='major', axis='y')
+    xticklabel = [ 8000,32000,128000, 512000]
+   # xticklabel2 = [ 8,32,128, 512]
+    plt.tick_params(\
+    axis='x',          # changes apply to the x-axis
+    which='minor',      # both major and minor ticks are affected
+    bottom='off',      # ticks along the bottom edge are off
+    top='off',         # ticks along the top edge are off
+    labelbottom='on') # labels along the bottom edge are off
+    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+    plt.legend(loc='upper left', prop={'size':legendsize},ncol=2)
+    for n in range(6):#[5,4,3,2,1,0]:
+        y=mydata[n+1]
+        plt.plot(x, y, label=mylabel[n], linestyle='None', marker=mymarker[n], markersize=8, mfc=mymfc[n],mec=mycolor[n], color=mycolor[n],markeredgewidth=1)
+        plt.plot(x, [y[0] * (x[i] / x[0]) for i in range(len(x))], linestyle='--', color=mycolor[n])
+        if n==5:
+            myfit = getPowerFit(x[:4], y[:4])
+            amp=myfit[1]
+            index=myfit[2]
+            fitlabel=r'$N_{nz}=$'+r'${0:.2f}N^{{{1:.2f}}}$'.format(myfit[1], myfit[2])
+            plt.plot(x, amp * (x ** index), label=fitlabel, linestyle=':', color='red')
+        if n==2:
+            plt.plot(x, [x[i] * (x[i]+1) / 2 for i in range(len(x))], marker='*', label='dense', ms=12, linestyle='-', color='black')
+            plt.legend(loc='upper left', prop={'size':legendsize},ncol=1)
+            if filename=='':
+                figureFile=sys._getframe().f_code.co_name[4:]+"1.eps"
+                plt.savefig(figureFile)
+
+    #mpl.rc('text', usetex=True)
+    plt.legend(loc='upper left', prop={'size':legendsize},ncol=2)
+
+    if show:
+        plt.show()
+        return
+    elif filename=='':
+        filename=sys._getframe().f_code.co_name[4:]+".eps"
+    plt.savefig(filename)
+    logging.info('%s generated.' % filename)
+    return
+
+
+def plotFactorizationScaling(filename='',show=False):
+    """
+    Walltime scaling with the number of basis functions for symbolic and numerical factorizations of the CNT (left), DNW (middle), and BDC (right) examples with Scotch-library matrix ordering. 
+    Solid lines show a linear increase in walltime as the number of basis functions increase while the dashed line in the right (BDC) plot shows a power fit for numerical factorization with the equation given in the legend.
+    """
+    # symbolic and numeric factorization
+    ptype, psize, tsym, tnum = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_factorization.txt", unpack=True, usecols=(1, 2, 6, 7))
+    font = {'weight' : 'normal',
+        'size'   : 12}
+    mpl.rc('font', **font)
+    legendsize = 12
+    ms = 5
+    fig, _ = plt.subplots(nrows=1, ncols=3, figsize=(9.5, 3.5))
+
+    myxlim=[5000,1.2e6]
+    myylim=[1,8e3]
+    for p in range(1,4):
+        plt.subplot(1, 3, p)
+        x = psize[ptype == p]
+        y1 = tsym[ptype == p]
+        y2 = tnum[ptype == p]
+
+        p1,=plt.plot(x, y1, label='sym.', linestyle='None', marker='o', markersize=ms, mfc='none', mec='red')
+        p2,=plt.plot(x, y2, label='num. ', linestyle='None', marker='o', markersize=ms, mfc='blue', mec='blue')
+        plt.plot(x, [y1[0] * x[i] / x[0] for i in range(len(x))], linestyle='-', color='red')
+        plegend=plt.legend(handles=[p1,p2],loc='upper left', prop={'size':legendsize})
+        plt.gca().add_artist(plegend)
+        if p<3:
+            plt.plot(x, [y2[0] * x[i] / x[0] for i in range(len(x))], linestyle='-', color='blue')
+        plt.xscale('log')
+        plt.yscale('log')
+        if p==1: plt.ylabel(r'Walltime, $t$ (s)')
+        if p==2: plt.xlabel(r'Number of basis functions, $N$')
+        if p==3:
+            myfit = getPowerFit(x[0:3], y2[0:3])
+            mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
+            f1,=plt.plot(x[0:3], myfit[0], label=mylabel, linestyle='--', color='blue')
+            plt.legend(handles=[f1],loc='lower right', prop={'size':legendsize})
+
+        plt.xlim(myxlim)
+        plt.ylim(myylim)
+        if p>1: plt.gca().get_yaxis().set_ticklabels([])
+        #myxticks=[8000,64000,512000]
+        #plt.xticks(myxticks, map(lambda i : "%d" % i, myxticks))
+
+    fig.tight_layout()
+    if show:
+        plt.show()
+        return
+    elif filename=='':
+        filename=sys._getframe().f_code.co_name[4:]+".eps"
+    plt.savefig(filename)
+    logging.info('%s generated.' % filename)
+    return
+
+
+def plotCNT8000Profile(filename='',show=False):
+    """
+    The decomposition of walltime scaling with the number of cores in terms of symbolic factorization (top left), 
+    numerical factorization (top right), solution (bottom left), and orthogonalization (bottom right) for CNT8000. 
+    Each plot shows the scaling using either all the cores for a single slice (up to 256 cores) or one core per slice (up to 16,384 slices). 
+    The straight lines show ideal linear scaling. 
+    The dashed line in the numerical factorization plot shows the change in time to solution based on Amdahl's law.
+    """
+    nSlices, nCores, totalTime, solTime, symTime, numTime, ortTime = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_1slice.txt", unpack=True, usecols=(1, 2, 8, 15, 16, 17, 18))
+ #   mydata=loadData(dataFile)
+    font = {'weight' : 'normal',
+        'size'   : 12}
+    mpl.rc('font', **font)
+    myxlim = [0.8, 30000]
+    myylim = [0.3, 7000]
+    mylegendsize = 10
+    myx = [1, 4, 16, 64, 256, 1024, 4096, 16394]
+    xticklabel = [ 1, 4, 16, 64, 1024,16384]
+
+
+    plt.figure()
+    fig, ax = plt.subplots(nrows=2, ncols=2)  # ,figsize=(8,6))
+    plt.setp(ax, xlim=myxlim, ylim=myylim, xscale='log', yscale='log')
+    x = nCores[(nSlices == 1)]
+    mymarker5 = itertools.cycle(list('osd^*>v<*'))
+    mymarker6 = itertools.cycle(list('osd^*>v<*'))
+    mycolor5 = itertools.cycle(list('rgbkcmyk'))
+    mycolor6 = itertools.cycle(list('rgbkcmyk'))
+
+    plt.subplot(2, 2, 1)
+    y = symTime[(nSlices == 1)]
+    plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
+    plt.plot(x, y, label='sym. (single slice)', linestyle='None', marker=next(mymarker5), markersize=5, mfc='None', mec='red')
+    x2 = nCores[(nSlices > 1)]
+    y2 = symTime[(nSlices > 1)]
+    plt.plot(x2, y2, label='sym. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='blue', mec='blue')
+
+    plt.ylabel('Walltime (s)')
+    plt.legend(loc='upper right', prop={'size':mylegendsize})
+    plt.xscale('log',basex=2)
+    plt.yscale('log')
+    plt.xlim(myxlim)
+    plt.ylim(myylim)
+    plt.gca().get_xaxis().set_ticklabels([])
+
+    plt.subplot(2, 2, 2)
+    y = numTime[(nSlices == 1)]
+    plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
+    plt.plot(x, y, label='num. (single slice)', linestyle='None', marker=next(mymarker5), markersize=5, mfc='None', mec='red')
+    x2 = nCores[(nSlices > 1)]
+    y2 = numTime[(nSlices > 1)]
+    plt.plot(x2, y2, label='num. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='blue', mec='blue')
+
+    xAmdahl=getExtendedArray(x, 2e5)
+    tAmdahl=getAmdahlLaw(y[0], y[0]/64.0, xAmdahl)
+    plt.plot(xAmdahl,tAmdahl , linestyle='--', marker='.', color='blue')
+
+    plt.legend(loc='upper right', prop={'size':mylegendsize})
+    plt.xscale('log',basex=2)
+    plt.yscale('log')
+    plt.xlim(myxlim)
+    plt.ylim(myylim)
+    plt.gca().get_xaxis().set_ticklabels([])
+    plt.gca().get_yaxis().set_ticklabels([])
+
+
+    plt.subplot(2, 2, 3)
+    y = solTime[(nSlices == 1)]
+    plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
+    plt.plot(x, y, label='sol. (single slice)', linestyle='None', marker=next(mymarker5), markersize=5, mfc='None', mec='red')
+    x2 = nCores[(nSlices > 1)]
+    y2 = solTime[(nSlices > 1)]
+    plt.plot(x2, y2, label='sol. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='blue', mec='blue')
+    plt.xlabel('Number of cores')
+    plt.ylabel('Walltime (s)')
+    plt.legend(loc='upper right', prop={'size':mylegendsize})
+    plt.xscale('log',basex=2)
+    plt.yscale('log')
+    plt.xlim(myxlim)
+    plt.ylim(myylim)
+    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+
+    plt.subplot(2, 2, 4)
+    y = ortTime[(nSlices == 1)]
+    plt.plot(myx, [y[0] / myx[i] / myx[0] for i in range(len(myx))], linestyle='-', color='black')
+    plt.plot(x, y, label='ort. (single slice)', linestyle='None', marker=next(mymarker5), markersize=5, mfc='None', mec='red')
+    x2 = nCores[(nSlices > 1)]
+    y2 = ortTime[(nSlices > 1)]
+    plt.plot(x2, y2, label='ort. (one core per slice)', linestyle='None', marker=next(mymarker6), markersize=5, mfc='blue', mec='blue')
+    plt.xscale('log',basex=2)
+    plt.yscale('log')
+    plt.xlim(myxlim)
+    plt.ylim(myylim)
+    plt.xlabel('Number of cores')
+    plt.gca().get_yaxis().set_ticklabels([])
+    plt.legend(loc='upper right', prop={'size':mylegendsize})
+    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+    fig.tight_layout()
+
+    if show:
+        plt.show()
+        return
+    elif filename=='':
+        filename=sys._getframe().f_code.co_name[3:]+".eps"
+    plt.savefig(filename)
+    logging.info('%s generated.' % filename)
+    return
+
+
+def plotCNT8000Scaling(filename='',show=False):
+    """
+    Strong scaling plot of CNT8000 using all cores for a single slice (blue circles), one core per slice (green squares), and 16 cores per slice (red diamonds). 
+    The straight line shows a linear decrease in time to solution with respect to number of cores. 
+    Dashed lines shows the change in time to solution based on Amdahl's law.
+    """
+    nSlices, nCores,setupTime,solveTime, totalTime = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_1slice.txt", unpack=True, usecols=(1, 2,6,7, 8))
+    T_size, T_nSlices, T_nCores,T_setupTime,T_solveTime, T_totalTime = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt", unpack=True, usecols=(1, 2, 3,7,8, 9))
+    x = nCores[(nSlices == 1)]
+    y = totalTime[(nSlices == 1)]
+    x2 = nCores[(nSlices > 1)]
+    y2 = totalTime[(nSlices > 1)]
+    x3 = T_nCores[(T_size == 8000)]
+    y3 = T_totalTime[(T_size == 8000)]
+    x4 = [1, 2, 4, 8, 16, 64, 256, 1024, 4096, 16384]
+
+    tSetupVec=setupTime[(nSlices > 1)]
+    tSetup=sum(tSetupVec)/len(tSetupVec)
+    xAmdahl=getExtendedArray(x2, 40000)
+    yAmdahl=getAmdahlLaw(y[0], tSetup, xAmdahl)
+
+    tSetupVec2=T_setupTime[(T_size == 8000)]
+    tSetup2=sum(tSetupVec2)/len(tSetupVec2)
+    xAmdahl2=getExtendedArray(x3, 40000)
+    yAmdahl2=getAmdahlLaw(y3[0], tSetup2, xAmdahl2/16.0)
+
+    plt.figure()
+    ls=14
+    fs=14
+    font = {'weight' : 'normal',
+        'size'   : fs}
+    mpl.rc('font', **font)
+
+    plt.xscale('log',basex=2)
+    plt.yscale('log')
+    plt.xlabel('Number of cores')
+    plt.ylabel('Time to solution (s)')
+    plt.xticks(x4, map(lambda i : "%d" % i, x4))
+    plt.xlim([0.5, 35000])
+    plt.ylim([0.1, 5000])
+
+    plt.plot(x, y, label='single slice', linestyle='None', marker='o', markersize=8, color='blue')
+    plt.plot(x4, [y[0] / (x4[i] / x4[0]) for i in range(len(x4))], linestyle='-', color='blue')
+    plt.plot(x2, y2, label='one core per slice', linestyle='None', marker='s', markersize=8, color='green')
+    plt.legend(loc='lower left', prop={'size':ls})
+
+    plt.savefig('SIPs_single_slice1.eps')
+#    plt.plot(x2,tAmdahl , label="Amdahl's law", linestyle='--', marker='.', color='green')
+    plt.plot(xAmdahl,yAmdahl , linestyle='--', marker='.', color='green')
+    plt.legend(loc='lower left', prop={'size':ls})
+    plt.savefig('SIPs_single_slice2.eps')
+
+    plt.plot(x3, y3, label='16 cores per slice', linestyle='None', marker='d', markersize=8, color='red')
+    plt.plot(x3, [y3[0] / (x3[i] / x3[0]) for i in range(len(x3))], linestyle='-', color='red')
+    plt.plot(xAmdahl2,yAmdahl2 , linestyle='--', marker='.', color='red')
+    plt.legend(loc='lower left', prop={'size':ls})
+
+ #   plt.plot(x3,tAmdahl , label="Amdahl's law", linestyle='--', marker='.', color='red')
+    if show:
+        plt.show()
+        return
+    elif filename=='':
+        filename=sys._getframe().f_code.co_name[3:]+".eps"
+    plt.savefig(filename)
+    logging.info('%s generated.' % filename)
+    return
+
+
+def plotSIPsStrongWeakScaling(filename_strong='',filename_weak='',show=False):
+    """
+    Generates Figures 6 and 7 in SIPs paper.
+    Figure 6. Strong scaling plots of the CNT (left), DNW (center), and BDC (right) examples with different number of basis functions represented by N in the legend. 
+    Straight lines correspond to a linear decrease in solution time with respect to number of cores. Dashed lines show the estimated time to solution based on Amdahl's law.
+    Figure 7. Weak scaling plots of the CNT (left), DNW (center), and BDC (right) examples with indicated fixed ratios of the number of basis functions to the square root of the number of cores.
+    """
+    # strong and weak scaling plots
+    font = {'weight' : 'normal',
+        'size'   : 20}
+    mpl.rc('font', **font)
+    TmatrixSize, TnCores, Tratios, TsetupTime,TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
+    WmatrixSize, WnCores, Wratios, WsetupTime,WsolveTime, WtotalTime, Wncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_W.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
+    DmatrixSize, DnCores, Dratios, DsetupTime,DsolveTime, DtotalTime, Dncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_D.txt', unpack=True, usecols=(1, 3, 6, 7, 8, 9, 10))
+
+    ratiosT = [2000, 1000, 500, 250, 125, 62.5]  # ,192]
+    ratiosW = [2000, 1000, 500, 250, 125, 62.5]  # ,192]
+    ratiosD = [2000, 1000, 500, 250, 125, 62.5]  # ,192]
+    ratiosT = [2000, 1000, 500, 250]  # ,192]
+    ratiosW = [2000, 1000, 500, 250]  # ,192]
+    ratiosD = [2000, 1000, 500, 250]  # ,192]
+    xticklabel = [ 8000,32000, 128000,512000]
+
+    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 6.5))
+    plt.subplot(1, 3, 1)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.xlim(5000, 1e6)
+    plt.ylim(10, 1e4)
+    plt.grid(which='major', axis='y')
+    ylabel = "Time to solution (s)"
+    plt.ylabel(ylabel)
+    mymarker = itertools.cycle(list('o^sd*h>v<*'))
+    mycolorRGB = itertools.cycle(list('rgbk'))
+
+    legendsize = 15
+    ms = 8
+    for i in range(len(ratiosT)):
+        x = TmatrixSize[np.logical_and(Tratios == ratiosT[i], Tncoresperslice == 16)]
+        y = TtotalTime[np.logical_and(Tratios == ratiosT[i], Tncoresperslice == 16)]
+        x2 = TmatrixSize[np.logical_and(Tratios == ratiosT[i], Tncoresperslice == 32)]
+        y2 = TtotalTime[np.logical_and(Tratios == ratiosT[i], Tncoresperslice == 32)]
+        myLabel = "ratio = " + str(ratiosT[i])
+        currentmarker = next(mymarker)
+        currentcolor = next(mycolorRGB)
+        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
+    plt.legend(loc='upper right', prop={'size':legendsize})
+    plt.tick_params(\
+    axis='x',          # changes apply to the x-axis
+    which='minor',      # both major and minor ticks are affected
+    bottom='off',      # ticks along the bottom edge are off
+    top='off',         # ticks along the top edge are off
+    labelbottom='on') # labels along the bottom edge are off
+    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+
+
+    plt.subplot(1, 3, 2)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.xlim(5000, 1e6)
+    plt.ylim(10, 1e4)
+    plt.grid(which='major', axis='y')
+    xlabel = "Number of basis functions"
+    plt.xlabel(xlabel)
+    mymarker = itertools.cycle(list('o^sd*h>v<*'))
+    for i in range(len(ratiosW)):
+        x = WmatrixSize[np.logical_and(Wratios == ratiosW[i], Wncoresperslice == 16)]
+        y = WtotalTime[np.logical_and(Wratios == ratiosW[i], Wncoresperslice == 16)]
+        x2 = WmatrixSize[np.logical_and(Wratios == ratiosW[i], Wncoresperslice == 32)]
+        y2 = WtotalTime[np.logical_and(Wratios == ratiosW[i], Wncoresperslice == 32)]
+        myLabel = "ratio = " + str(ratiosW[i])
+        currentmarker = next(mymarker)
+        currentcolor = next(mycolorRGB)
+        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
+    plt.legend(loc='upper right', prop={'size':legendsize})
+    plt.xlim(5000, 1e6)
+    plt.ylim(10, 1e4)
+    plt.gca().get_yaxis().set_ticklabels([])
+    plt.tick_params(\
+    axis='x',          # changes apply to the x-axis
+    which='minor',      # both major and minor ticks are affected
+    bottom='off',      # ticks along the bottom edge are off
+    top='off',         # ticks along the top edge are off
+    labelbottom='on') # labels along the bottom edge are off
+    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+
+    plt.subplot(1, 3, 3)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.grid(which='major', axis='y')
+    mymarker = itertools.cycle(list('o^sd*h>v<*'))
+    for i in range(len(ratiosD)):
+        x = DmatrixSize[np.logical_and(Dratios == ratiosD[i], Dncoresperslice == 16)]
+        y = DtotalTime[np.logical_and(Dratios == ratiosD[i], Dncoresperslice == 16)]
+        x2 = DmatrixSize[np.logical_and(Dratios == ratiosD[i], Dncoresperslice > 16)]
+        y2 = DtotalTime[np.logical_and(Dratios == ratiosD[i], Dncoresperslice > 16)]
+        myLabel = "ratio = " + str(ratiosD[i])
+        currentmarker = next(mymarker)
+        currentcolor = next(mycolorRGB)
+        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
+
+    plt.legend(loc='upper right', prop={'size':legendsize})
+    plt.xlim(5000, 1e6)
+    plt.ylim(10, 1e4)
+    plt.gca().get_yaxis().set_ticklabels([])
+    plt.tick_params(\
+    axis='x',          # changes apply to the x-axis
+    which='minor',      # both major and minor ticks are affected
+    bottom='off',      # ticks along the bottom edge are off
+    top='off',         # ticks along the top edge are off
+    labelbottom='on') # labels along the bottom edge are off
+    plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+
+    fig.tight_layout()
+    if show:
+        plt.show()
+        return
+    elif filename_weak=='':
+        filename_weak = "SIPsweak.eps"
+    plt.savefig(filename_weak)
+
+    # strong scaling
+    # strong scaling
+    # strong scaling
+#     font = {'weight' : 'normal',
+#         'size'   : 16}
+#     mpl.rc('font', **font)
+    matlistD = [8000, 16000, 32000, 64000]
+    matlistW = [8000, 32000, 128000]
+    matlistT = [8000, 64000, 512000]
+    xticklabel=[16,64,256, 1024,4096,16384,65536 ,266144]
+    myxlim=[12,4e6]
+    myxticks=np.logspace(4,20,9,base=2)
+
+    nAmdahl=3
+    xlabel = "Number of cores"
+    ylabel = "Time to solution (s)"
+
+    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 6.5))
+  #  fig, axes = plt.subplots(nrows=1, ncols=3,figsize=(9.5,3.5))
+
+    plt.subplot(1, 3, 1)
+    plt.xscale('log',basex=2)
+    plt.yscale('log')
+    plt.grid(which='major', axis='y')
+    plt.ylabel(ylabel)
+    plt.xlim(myxlim)
+    plt.ylim(1, 1e4)
+    mymarker = itertools.cycle(list('o^sd*h>v<*'))
+    mycolorRGB = itertools.cycle(list('rgbk'))
+    for i in range(len(matlistT)):
+        myLabel = r'$N=$' + str(matlistT[i])
+        currentmarker = next(mymarker)
+        currentcolor = next(mycolorRGB)
+        x = TnCores[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 16)]
+        y = TtotalTime[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 16)]
+        if (i<nAmdahl):
+            tsVec=TsetupTime[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 16)]
+            ts=sum(tsVec)/len(tsVec)
+            xAmdahl=getExtendedArray(x, 1e7)
+            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0]))
+            if (nAmdahl==1):
+                plt.plot(xAmdahl, yAmdahl, linestyle='--', label="Amdahl's law", marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
+            else:
+                plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
+
+        x1 = TnCores[(TmatrixSize == matlistT[i])]
+        y1 = TtotalTime[(TmatrixSize == matlistT[i])]
+        x2 = TnCores[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 32)]
+        y2 = TtotalTime[np.logical_and(TmatrixSize == matlistT[i], Tncoresperslice == 32)]
+
+
+        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
+        plt.plot(sorted(x1), [sorted(y1, reverse=True)[0] / (sorted(x1)[i] / sorted(x1)[0]) for i in range(len(x1))], linestyle='-', color=currentcolor)
+    plt.xticks(myxticks)
+
+    plt.legend(loc='upper right', prop={'size':legendsize})
+   # plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+
+    plt.subplot(1, 3, 2)
+    plt.xscale('log',basex=2)
+    plt.yscale('log')
+    plt.xlim(myxlim)
+    plt.ylim(1, 1e4)
+    plt.grid(which='major', axis='y')
+    mymarker = itertools.cycle(list('o^sd*h>v<*'))
+    mycolorRGB = itertools.cycle(list('rgbk'))
+    for i in range(len(matlistW)):
+        x = WnCores[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 16)]
+        y = WtotalTime[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 16)]
+        x1 = WnCores[(WmatrixSize == matlistW[i])]
+        y1 = WtotalTime[(WmatrixSize == matlistW[i])]
+        x2 = WnCores[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 32)]
+        y2 = WtotalTime[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 32)]
+        myLabel = r'$N=$' + str(matlistW[i])
+        currentmarker = next(mymarker)
+        currentcolor = next(mycolorRGB)
+        if (i<nAmdahl):
+            tsVec=WsetupTime[np.logical_and(WmatrixSize == matlistW[i], Wncoresperslice == 16)]
+            ts=sum(tsVec)/len(tsVec)
+            xAmdahl=getExtendedArray(x, 1e7)
+            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0]))
+            if (nAmdahl==1):
+                plt.plot(xAmdahl, yAmdahl, linestyle='--', label="Amdahl's law", marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
+            else:
+                plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
+
+        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
+        plt.plot(sorted(x1), [sorted(y1, reverse=True)[0] / (sorted(x1)[i] / sorted(x1)[0]) for i in range(len(x1))], linestyle='-', color=currentcolor)
+    plt.gca().get_yaxis().set_ticklabels([])
+    plt.legend(loc='upper right', prop={'size':legendsize})
+    plt.xlabel(xlabel)
+   # plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+    plt.xticks(myxticks)
+
+    plt.subplot(1, 3, 3)
+    plt.xscale('log',basex=2)
+    plt.yscale('log')
+    plt.xlim(myxlim)
+    plt.ylim(1, 1e4)
+    plt.grid(which='major', axis='y')
+    mymarker = itertools.cycle(list('o^sd*h>v<*'))
+    mycolorRGB = itertools.cycle(list('rgbk'))
+    for i in range(len(matlistD)):
+        x = DnCores[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 16)]
+        y = DtotalTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 16)]
+        x1 = DnCores[(DmatrixSize == matlistD[i])]
+        y1 = DtotalTime[(DmatrixSize == matlistD[i])]
+        x2 = DnCores[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice > 16)]
+        y2 = DtotalTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice > 16)]
+        myLabel = r'$N=$' + str(matlistD[i])
+        currentmarker = next(mymarker)
+        currentcolor = next(mycolorRGB)
+        if (i<nAmdahl):
+            tsVec=DsetupTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 16)]
+            ts=sum(tsVec)/len(tsVec)
+            xAmdahl=getExtendedArray(x, 1e7)
+            yAmdahl=getAmdahlLaw(y[0], ts, xAmdahl/float(x[0]))
+            if (nAmdahl==1):
+                plt.plot(xAmdahl, yAmdahl, linestyle='--', label="Amdahl's law", marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
+            else:
+                plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
+        if i==3:
+            tsVec=DsetupTime[np.logical_and(DmatrixSize == matlistD[i], Dncoresperslice == 64)]
+            ts=sum(tsVec)/len(tsVec)
+            xAmdahl=getExtendedArray(x2, 1e7)
+            yAmdahl=getAmdahlLaw(y2[0], ts, xAmdahl/float(x2[0]))
+            plt.plot(xAmdahl, yAmdahl, linestyle='--', marker='.', markersize=ms, mfc=currentcolor, mec=currentcolor,color=currentcolor)
+
+        plt.plot(x, y, linestyle='None', label=myLabel, marker=currentmarker, markersize=ms, mfc=currentcolor, mec=currentcolor)
+        plt.plot(x2, y2, linestyle='None', marker=currentmarker, markersize=ms, mfc='none', mec=currentcolor)
+        plt.plot(sorted(x1), [sorted(y1, reverse=True)[0] / (sorted(x1)[i] / sorted(x1)[0]) for i in range(len(x1))], linestyle='-', color=currentcolor)
+    plt.gca().get_yaxis().set_ticklabels([])
+    plt.legend(loc='lower left', prop={'size':legendsize})
+  #  plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+    plt.xticks(myxticks)
+
+    fig.tight_layout()
+    if show:
+        plt.show()
+        return
+    elif filename_strong=='':
+        filename_strong = "SIPsstrong.eps"
+    plt.savefig(filename_strong)
+    logging.info('%s,%s generated.' % (filename_weak,filename_strong))
+    return
+
+
+def plotFactorizationStrongScaling(filename=None,show=False):
+    """
+    Strong scaling plots of symbolic (filled circles) and numerical factorizations (filled squares) of carbon nanotube (left), 
+    carbon nanowire (middle), and BDC (right) examples with the maximum number of basis functions (512,000, 128,000, and 64,000, respectively). 
+    Total cost of one symbolic and two numerical factorizations is shown with filled red diamonds.
+    """
+    datafile='data_max_factorization.txt'
+    logging.debug('\n\n Generating factorization scaling figure using data file:',datafile)
+
+    # strong scaling plots
+    font = {'weight' : 'normal',
+        'size'   : 12}
+    mpl.rc('font', **font)
+    legendsize = 11
+    ms = 6
+    nCores,matSize,symTime, numTime,fType = np.genfromtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/'+datafile, unpack=True,usecols=(1, 2,3,4,5))
+   #  fName = np.genfromtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_max_factorization.txt', unpack=True, usecols=(0),dtype=None)
+
+
+    xlabel = "Number of cores"
+    ylabel = "Walltime (s)"
+
+
+    fig, _ = plt.subplots(nrows=1, ncols=3, figsize=(9.5, 3.5))
+
+    mymarker = itertools.cycle(list('osd*h>v<*'))
+    mycolor = itertools.cycle(list('bgrgbk'))
+  #  fList=['tube', 'wire', 'diamond']
+    mList=[512000,128000,64000]
+    for i in range(3):
+        plt.subplot(1, 3, i+1)
+    #    xMin = nCores[np.logical_and(matSize==8000,fList[i] in fName)] # gave false for fList in condition
+        xMin = nCores[np.logical_and(matSize==8000,fType==i)]
+        yMinSym = symTime[np.logical_and(matSize==8000,fType==i)]
+        yMinNum = numTime[np.logical_and(matSize==8000,fType==i)]
+        yMinTot = yMinSym + 2.0 * yMinNum
+        xMax=nCores[np.logical_and(matSize==mList[i],fType==i)]
+        yMaxSym = symTime[np.logical_and(matSize==mList[i],fType==i)]
+        yMaxNum = numTime[np.logical_and(matSize==mList[i],fType==i)]
+        yMaxTot = yMaxSym + 2.0 * yMaxNum
+      #  currentmarker = mymarker.next()
+        plt.xscale('log',basex=2)
+        plt.yscale('log')
+        plt.grid(which='major', axis='y')
+        if (i==1): plt.xlabel(xlabel)
+        if (i==0): plt.ylabel(ylabel)
+        plt.xlim(10, 700)
+#         plt.ylim(0.5, 1500)
+        plt.ylim(1, 500)
+#         plt.plot(xMin, yMinSym, linestyle='None', label='sym. 8000', marker='o', markersize=ms, mfc='blue', mec='blue')
+#         plt.plot(xMin, yMinNum, linestyle='None', label='num. 8000', marker='s', markersize=ms, mfc='blue', mec='blue')
+#         plt.plot(xMin, yMinTot, linestyle='None', label='tot. 8000', marker='d', markersize=ms, mfc='blue', mec='blue')
+        plt.plot(xMax, yMaxSym, linestyle='None', label='sym. ', marker='o', markersize=ms, mfc='blue', mec='blue')
+        plt.plot(xMax, yMaxNum, linestyle='None', label='num. ', marker='s', markersize=ms, mfc='green', mec='green')
+        plt.plot(xMax, yMaxTot, linestyle='None', label='tot. ', marker='d', markersize=ms, mfc='red', mec='red')
+        if i<2:
+            plt.legend(loc='upper left', prop={'size':legendsize},ncol=1)
+        else:
+            plt.legend(loc='lower left', prop={'size':legendsize},ncol=1)
+        xticklabel = [ 16,32, 64,128, 256, 512]
+        plt.xticks(xticklabel, map(lambda i : "%d" % i, xticklabel))
+        if i>0: plt.gca().get_yaxis().set_ticklabels([])
+
+
+
+    fig.tight_layout()
+    if show:
+        plt.show()
+        return
+    elif filename==None:
+        filename=sys._getframe().f_code.co_name[3:]+".eps"
+    plt.savefig(filename)
+    logging.info('%s generated.' % filename)
+    return
+
+
+def plotSIPsElScaling(filename='',show=False):
+    """
+    Generates Figure 9.
+    Problem size scaling plot for all examples calculated with SIPs (filled symbols) and Elemental (unfilled symbols) using 16,384 cores. 
+    N and Nnz correspond to number of basis functions (matrix size), and number of nonzeros in the matrix factors, respectively. 
+    Dashed lines show a power fit for BDC examples (red) and for the CNT and DNW examples (blue) computed by SIPs. 
+    """
+    # strong scaling plots
+    font = {'weight' : 'normal',
+            'size'   : 12}
+    mpl.rc('font', **font)
+    legendsize = 11
+    ms = 6
+    if not show:
+        font = {'weight' : 'normal',
+            'size'   : 14}
+        mpl.rc('font', **font)
+        legendsize = 14
+        ms = 6
+    TmatrixSize, TnCores, Tratios, TsolveTime, TtotalTime, Tncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_T.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
+    WmatrixSize, WnCores, Wratios, WsolveTime, WtotalTime, Wncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_W.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
+    DmatrixSize, DnCores, Dratios, DsolveTime, DtotalTime, Dncoresperslice = np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_D.txt', unpack=True, usecols=(1, 3, 6, 9, 9, 10))
+    EmatrixSize, ETtotalTime,EWtotalTime,EDtotalTime= np.loadtxt('/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_El.txt', unpack=True, usecols=(0,1,2,3))
+    matrixSize,Tnnz,Wnnz,Dnnz = np.loadtxt("/Volumes/u/kecelim/Dropbox/work/SEMO/data/data_fillin.txt", unpack=True, usecols=(0,4,5,6))
+
+    matlistD = [8000, 16000, 32000, 64000]
+    matlistW = [8000, 16000, 32000, 64000, 128000]
+    matlistT = [8000, 16000, 32000,64000, 128000,256000, 512000]
+    x=np.arange(8000,5000000,1000)
+
+    xT=np.zeros(len(matlistT))
+    xT2=np.zeros(len(matlistT))
+    yT=np.zeros(len(matlistT))
+    if not show: plt.figure()
+
+    for i in range(len(matlistT)):
+        yT[i] = min(TsolveTime[np.logical_and(TnCores == 16384,TmatrixSize == matlistT[i])])
+        xT[i] = matlistT[i]*Tnnz[matrixSize == matlistT[i]]
+        xT2[i] = matlistT[i]
+
+    xW=np.zeros(len(matlistW))
+    xW2=np.zeros(len(matlistW))
+    yW=np.zeros(len(matlistW))
+    for i in range(len(matlistW)):
+        yW[i] = min(WsolveTime[np.logical_and(WnCores == 16384,WmatrixSize == matlistW[i])])
+        xW[i] = matlistW[i]*Wnnz[matrixSize == matlistW[i]]
+        xW2[i] = matlistW[i]
+
+    xD=np.zeros(len(matlistD))
+    xD2=np.zeros(len(matlistD))
+    yD=np.zeros(len(matlistD))
+    for i in range(len(matlistD)):
+        yD[i] = min(DsolveTime[np.logical_and(DnCores == 16384,DmatrixSize == matlistD[i])])
+        xD[i] = matlistD[i]*Dnnz[matrixSize == matlistD[i]]
+        xD2[i] = matlistD[i]
+
+    xTW=np.concatenate([xT,xW])
+    xTW2=np.concatenate([xT2,xW2])
+    yTW=np.concatenate([yT,yW])
+    if show:
+        xlabel = r"$N$"
+    else:
+        xlabel = r"Number of basis functions, $N$"
+
+    ylabel = r"Time to solution, $t$ (s)"
+
+    plt.xscale('log')
+    plt.yscale('log')
+  #  plt.grid(which='major', axis='y')
+    plt.xlabel(xlabel)
+    if not show:
+        plt.ylabel(ylabel)
+    plt.xlim(5e3, 1.1e6)
+    plt.ylim(1, 1.1e4)
+
+#    plotNNnz=1
+#     if plotNNnz:
+#         xT2=xT
+#         xW2=xW
+#         xD2=xD
+#         xTW2=xTW
+#         EmatrixSize= [EmatrixSize[i] * (EmatrixSize[i] +1) / 2 for i in range(len(EmatrixSize))]
+#         x=np.asarray([x[i] * (x[i] +1) / 2 for i in range(len(x))])
+
+    p1,=plt.plot(xT2, yT, linestyle='None', label="nanotube", marker='o', markersize=ms, mfc='b', mec='b')
+    p2,=plt.plot(xW2, yW, linestyle='None', label='nanowire', marker='s', markersize=ms, mfc='g', mec='g')
+    p3,=plt.plot(xD2, yD, linestyle='None', label='diamond', marker='d', markersize=ms, mfc='r', mec='r')
+    p4,=plt.plot(EmatrixSize, ETtotalTime, linestyle='None', label="nanotube", marker='o', markersize=ms+2, mfc='none', mec='b',mew=1)
+    p5,=plt.plot(EmatrixSize, EWtotalTime, linestyle='None', label='nanowire', marker='s', markersize=ms+2, mfc='none', mec='g',mew=1)
+    p6,=plt.plot(EmatrixSize, EDtotalTime, linestyle='None', label='diamond', marker='d', markersize=ms+2, mfc='none', mec='r',mew=1)
+    #p4,=plt.plot(EmatrixSize, EtotalTime, linestyle='None', label='Elemental', marker='*', markersize=ms+2, mfc='k', mec='k')
+
+#     myfit = getPowerFit(EmatrixSize, EtotalTime)
+#     mylabel=r'$t_{El}=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
+#     f2,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='black')
+
+#     myfit = getPowerFit(xW2, yW)
+#     mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
+#     f2,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='green')
+#
+#     myfit = getPowerFit(xT2, yT)
+#     mylabel=r'$t=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
+#     f3,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='blue')
+
+
+
+#    z = np.polyfit(EmatrixSize, EtotalTime, 3)
+#    myfit = np.poly1d(z)
+
+#     z = getCubicFit(xT2, yT)
+#     mylabel=r'$t_{El}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
+#     f6,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='blue')
+#
+#     z = getCubicFit(xW2, yW)
+#     mylabel=r'$t_{El}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
+#     f7,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='green')
+
+#     z = getCubicFit(xD2, yD)
+#     mylabel=r'$t_{SIPs}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
+#     f8,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='red')
+    if show:
+       # plegend = plt.legend(handles=[f4,f1], loc='lower right',prop={'size':legendsize})
+        #plt.gca().add_artist(plegend)
+        plegend =plt.legend(handles=[f1,f4,p4],loc='upper left', prop={'size':legendsize},frameon=False)
+    else:
+        plegend = plt.legend(handles=[p1,p2,p3,p4,p5,p6], loc='lower right',prop={'size':legendsize},ncol=2, title="SIPs                 Elemental")
+        plt.gca().add_artist(plegend)
+        plt.savefig("SIPs_El_scaling1.png")
+        myfit = getPowerFit(xD2, yD)
+        mylabel=r'$t_{SIPs}=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
+        f1,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='red')
+        myfit = getPowerFit(xTW2, yTW)
+        mylabel=r'$t_{SIPs}=$'+getSciNotation(myfit[1])+r'$N^{{{0:.2f}}}$'.format(myfit[2])
+        f4,=plt.plot(x, getPowerLaw(x,myfit[1],myfit[2]), label=mylabel, linestyle='--', color='blue')
+      #  z = getCubicFit(EmatrixSize, EtotalTime)
+       # mylabel=r'$t_{El}=$'+getSciNotation(z[0]) + r'$N^3+$' + getSciNotation(z[1]) + r'$N^2+$' + getSciNotation(z[2]) + r'$N$' #+ r'${{{0:.2f}}}$'.format(z[3])
+
+      #  f5,=plt.plot(x, getCubicFunction(x, *z), label=mylabel, linestyle='-', color='black')
+        plt.legend(handles=[f1,f4],loc='upper left', prop={'size':legendsize},frameon=False)
+ #   plt.gca().get_yaxis().set_ticklabels([])
+ #   fig.tight_layout()
+    if show:
+        plt.show()
+        return
+    elif filename=='':
+        filename=sys._getframe().f_code.co_name[3:]+".eps"
+    plt.savefig(filename)
+    logging.info('%s generated.' % filename)
+    return
+
+def plotSliceTimings(logFile,show=0):
     """
     Plot  slice Timings for a given input file
     """
@@ -1901,7 +1978,7 @@ def plotSliceTimings(logFile,embed=0):
     if len(sliceData2[2])>0:print 'Iter 2', max(sliceTiming2)/min(sliceTiming2)
 
     # strong scaling plots
-    if not embed: plt.figure()
+    if not show: plt.figure()
     font = {'weight' : 'normal',
         'size'   : 14}
     mpl.rc('font', **font)
@@ -1923,7 +2000,7 @@ def plotSliceTimings(logFile,embed=0):
 
 
 
-    if not embed:plt.savefig(logFile+'sliceTiming.png')
+    if not show:plt.savefig(logFile+'sliceTiming.png')
     if len(sliceData2[2])>0:
         if nSlice<100:
             mfc='none'
@@ -1932,9 +2009,9 @@ def plotSliceTimings(logFile,embed=0):
         plt.plot(x,sliceTiming2,label=str(nSlice)+' nonuniform slices',ls='none',marker='o', markersize=ms, mfc=mfc, mec='b')
         plt.legend(loc='upper right', prop={'size':legendsize})
 
-        if not embed:plt.savefig(logFile+'sliceTiming2.png')
+        if not show:plt.savefig(logFile+'sliceTiming2.png')
 
-    if not embed: plt.show()
+    if not show: plt.show()
     return
 
 def initializeLog(debug):
@@ -1969,38 +2046,19 @@ def main():
     args = getArgs()
     initializeLog(args.debug)
     if args.input is not None:
-        logFile = args.input
+        logFile = args.inputun 
         logging.debug('input file given')
         plotSliceTimings(logFile)
 
     else:
-       # makeNonzerosFigure()
-       # doEigenvalueSpectrumFigure()
-#         doNonzerosFigure()
-     #   doFactorizationStronScalingFigure()
-     #    doOneSliceFigure()
-       #  doOneSliceProfileFigure()
-         #doScalingFigure()
-       #  plotScotchvsMetis()
-        # doSliceTimingFigure()
-         #makeSpectrumClusterPlots2()
-         #makeSpectrumClusterPlots3()
-         #doEigenvalueSpectrumFigure3()
- #        doOneSliceProfileFigure()
-      #  doReorderingFigure()
-       # doFactorizationScalingFigure()
-  #       doSIPsScalingFigure()
-       #  plotSIPsElementalScaling()
-        # doTOCFigure()
-   #      plotSIPsNNnzScalingFigure()
-       # plotNonzerosFigure()
-       # doReorderingFigure()
-        doNonzerosFigure()
-        doFactorizationScalingFigure()
-        doScalingFigure()
-        doFactorizationStronScalingFigure2()
-        plotSIPsElementalScaling()
-        #   plt.show()
+        showplot=False
+        plotNnzScaling(filename='Figure2.eps',show=showplot)
+        plotFactorizationScaling(filename='Figure3.eps',show=showplot)
+        plotCNT8000Profile(filename='Figure4.eps',show=showplot)
+        plotCNT8000Scaling(filename='Figure5.eps',show=showplot)
+        plotSIPsStrongWeakScaling(filename_weak='Figure7.eps',filename_strong='Figure6.eps',show=showplot)
+        plotFactorizationStrongScaling(filename="Figure8.eps",show=showplot)
+        plotSIPsElScaling(filename="Figure9.eps",show=showplot)
 
 if __name__ == "__main__":
     main()
